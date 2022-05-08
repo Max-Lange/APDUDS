@@ -16,9 +16,10 @@ This file contains the following modules:
 """
 
 import warnings
-from osm_extractor import extractor, splitter
-from plotter import network_plotter
+from osm_extractor import extractor, cleaner, splitter
+from plotter import network_plotter, voronoi_plotter
 from terminal import greeting
+from attribute_calculator import voronoi_area
 from matplotlib import pyplot as plt
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -31,17 +32,22 @@ def step_1(coords: list[float], space: int):
         coords (list[float]): north, south, east and west coordinates of the wanted bounding box
         space (int): maximum allowable distance between intermediate gullies
     """
-    nodes_1, edges_1 = extractor(coords)
-    nodes_2, edges_2 = splitter(nodes_1, edges_1, space)
+
+    nodes, edges = extractor(coords)
+    filtered_nodes, filtered_edges = cleaner(nodes, edges)
+    split_nodes, split_edges = splitter(filtered_nodes, filtered_edges, space)
+    area_nodes, voro = voronoi_area(split_nodes)
 
     _ = plt.figure()
     # Create a plot for the downloaded road network
-    network_plotter(nodes_1, edges_1, subplot_number=121)
+    network_plotter(filtered_nodes, filtered_edges, 221)
     # Create a plot for the split road network
-    network_plotter(nodes_2, edges_2, subplot_number=122)
+    network_plotter(split_nodes, split_edges, 222)
+    # Create a plot of the vornoi catchement areas
+    voronoi_plotter(area_nodes, voro, 223)
+
 
     plt.show()
-
 
 
 def main():

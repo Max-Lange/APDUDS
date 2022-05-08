@@ -13,6 +13,7 @@ functions:s
 """
 
 from matplotlib import pyplot as plt
+import numpy as np
 from pandas import DataFrame
 
 def network_plotter(nodes: DataFrame, edges: DataFrame, subplot_number: int):
@@ -21,8 +22,7 @@ def network_plotter(nodes: DataFrame, edges: DataFrame, subplot_number: int):
     Args:
         nodes (DataFrame): positional (x, y) data of the nodes
         edges (DataFrame): from, to data of the edges
-        relevant_ax (bool, optional): Ax to plot to (use if you want the plot
-        to be part of an external subplot). Defaults to None.
+        subplot_number (int): Ax to plot to
     """
     plt.subplot(subplot_number)
     plt.plot(nodes.x, nodes.y, "o")
@@ -34,3 +34,19 @@ def network_plotter(nodes: DataFrame, edges: DataFrame, subplot_number: int):
 
 
     plt.axis('scaled')
+
+
+def voronoi_plotter(nodes: DataFrame, voro, subplot_number: int):
+    """Fill a plot with the nodes as points and the vornoi areas a colored polygons
+
+    Args:
+        nodes (DataFrame): x and y positions of the nodes
+        voro (freud.locality.voronoi): freud voronoi instance containting polygon information
+        subplot_number (int): Ax to plot to
+    """
+
+    points = np.array([[nodes.x[i], nodes.y[i], 0] for i in range(len(nodes))])
+
+    axes = plt.subplot(subplot_number)
+    voro.plot(ax=axes)
+    axes.scatter(points[:, 0], points[:, 1])
