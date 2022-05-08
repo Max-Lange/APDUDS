@@ -34,7 +34,6 @@ def extractor(coords: list, aggregation_size=10):
         tuple: Two Dataframes containing the node and edge data respectively
     """
 
-
     # Download osm data, reproject into meter-using coordinate system, consolidate nearby nodes
     osm_map = ox.graph_from_bbox(coords[0], coords[1], coords[2], coords[3], network_type="drive")
     osm_projected = ox.project_graph(osm_map)
@@ -53,21 +52,45 @@ def extractor(coords: list, aggregation_size=10):
     edges = pd.DataFrame({"from":int_from, "to":int_to, "length":edges_reset.length})
     nodes = pd.DataFrame({"x":nodes_reset.x, "y":nodes_reset.y})
 
-    # Two edges may exist between the same two nodes, filter these out
-    combos = []
-    filtered_edges = pd.DataFrame(columns=["from", "to", "length"])
-    for _, line in edges.iterrows():
-        combo = set([line["from"], line["to"]])
+    return nodes, edges
 
-        if combo not in combos:
-            filtered_edges.loc[len(filtered_edges)] = [line["from"], line["to"], line["length"]]
-            combos.append(combo)
+
+def cleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
+    """_summary_
+
+    Args:
+        nodes (pd.DataFrame): positional (x, y) data of the nodes
+        edges (pd.DataFrame): from, to and length data of the edges (lines) of the network
+
+    Returns:
+        tuple[Dataframe, Dataframe]: Dataframes for the (filtered) nodes and edges
+    """
+
+    nodes = nodes.copy()
+    edges = edges.copy()
 
     # Reset the x and y values of the nodes to start from 0
     nodes.x = nodes.x - nodes.x.min()
     nodes.y = nodes.y - nodes.y.min()
 
+    # And then make the center of the network the center of the axes
+    nodes.x = nodes.x - (nodes.x.max() / 2)
+    nodes.y = nodes.y - (nodes.y.max() / 2)
+
+    # Duplicate edges or nodes may exist. These need to be filtered out
+    combos = []
+    filtered_edges = pd.DataFrame(columns=["from", "to", "length"])
+    for _, line in edges.iterrows():
+        if line["from"] != line["to"]:
+            combo = set([line["from"], line["to"]])
+
+            if combo not in combos:
+                filtered_edges.loc[len(filtered_edges)] = [line["from"], line["to"], line["length"]]
+                combos.append(combo)
+
+
     return nodes, filtered_edges
+
 
 
 def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
@@ -81,6 +104,7 @@ def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
     Returns:
         tuple[Dataframe, Dataframe]: Dataframes for the nodes and (split) edges
     """
+
     nodes = nodes.copy()
     new_edges = pd.DataFrame(columns=["from", "to", "length"])
     for _, line in edges.iterrows():
@@ -94,49 +118,25 @@ def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
             to_node = nodes.iloc[int(line["to"])]
 
             # Amount of splits, new lenght of resulting pipe sections, and x,y stepsize
-            amount = int(line["length"] // max_space)
+            amount = int(np.ceil(line["length"] / max_space) - 1)
             new_length = line["length"] / (amount + 1)
-            step = np.sqrt((to_node.y - from_node.y) ** 2 + \
-                (to_node.x - from_node.x) ** 2) / (amount)
 
             # Determine the direction in which to advance the x and y coords
-            if to_node.x == from_node.x:
-                slope = np.inf
-
-            else:
-                slope = (to_node.y - from_node.y) / (to_node.x - from_node.x)
-
-            relation = np.sqrt(slope ** 2 + 1)
-
-            if to_node.x - from_node.x < 0:
-                relation *= -1
-
-            new_x = from_node.x + (step / relation)
-
-            if slope == np.inf:
-                new_y = from_node.y + step
-
-            else:
-                new_y = from_node.y + ((slope * step) / relation)
+            x_step_size = (to_node.x - from_node.x) / (amount + 1)
+            y_step_size = (to_node.y - from_node.y)  / (amount + 1)
 
             # Special case for the first node and edge
             index_i = len(nodes)
-            nodes.loc[index_i] = [new_x, new_y]
+            nodes.loc[index_i] = [from_node.x + x_step_size, from_node.y + y_step_size]
             new_edges.loc[len(new_edges)] = [line["from"], index_i, new_length]
 
             # Add new nodes and edges for the needed nodes in the middle
-            for i in range(2, amount):
-                new_x = from_node.x + (step / relation) * i
-
-                if slope == np.inf:
-                    new_y = from_node.y + step * i
-
-                else:
-                    new_y = from_node.y + ((slope * step) / relation) * i
-
-                index_i = len(nodes)
-                nodes.loc[index_i] = [new_x, new_y]
-                new_edges.loc[len(new_edges)] = [index_i - 1, index_i, new_length]
+            if amount > 1:
+                for i in range(2, amount+1):
+                    index_i = len(nodes)
+                    nodes.loc[index_i] = [from_node.x + x_step_size * i, \
+                        from_node.y + y_step_size * i]
+                    new_edges.loc[len(new_edges)] = [index_i - 1, index_i, new_length]
 
             # Special case for the last edge
             new_edges.loc[len(new_edges)] = [index_i, line["to"], new_length]
