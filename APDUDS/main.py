@@ -18,7 +18,7 @@ This file contains the following modules:
 import warnings
 from osm_extractor import extractor, cleaner, splitter
 from plotter import network_plotter, voronoi_plotter
-from terminal import greeting
+from terminal import greeting, step_2_input
 from attribute_calculator import voronoi_area
 from matplotlib import pyplot as plt
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -46,8 +46,9 @@ def step_1(coords: list[float], space: int):
     # Create a plot of the vornoi catchement areas
     voronoi_plotter(area_nodes, voro, 223)
 
+    plt.show(block=False)
 
-    plt.show()
+    return area_nodes, split_edges
 
 
 def main():
@@ -55,8 +56,8 @@ def main():
     """
 
     coords, space = greeting()
-    step_1(coords, space)
-
+    _, _ = step_1(coords, space)
+    _ = step_2_input()
 
 
 def tester():
