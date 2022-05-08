@@ -110,15 +110,37 @@ def greeting():
     space = gully_space_input()
 
     print("The pipe network and gully distribution for the area you selected will\
-now be calculated. A figure will apear. Close this figure once you are ready to proceed.")
+now be calculated.\n A set of figures will appear.\
+Close this figure once you are ready to proceed.")
 
     return coords, space
+
+def step_2_input():
+    """Present the user with the input space for the burring depth parameters
+    """
+
+    print("\nNow that the Network has been generated, some actual UDS attributes can be\n\
+Calculated. Please enter the required information to enable these calculation steps:")
+
+    print("\n\nPlease enter the index of the point you want to designate as an outfall point:")
+    outfall = int(input("Outflow point index: "))
+
+    print("\n\nNow do the same for the outfall point:")
+    overflow = int(input("Overflow point index: "))
+
+    print("\n\nEnter the minimum depth below the ground at which pipes can be installed:")
+    min_depth = float(input("Minimum installation depth [m]: "))
+
+    print("\n\nEnter the minimum slope for the pipes: ")
+    min_slope = float(input("Minimum slope [-]: "))
+
+    return {"outfall":outfall, "overflow":overflow, "min_depth":min_depth, "min_slope":min_slope}
 
 
 def main():
     """Only used for testing purposes"""
 
-    greeting()
+    step_2_input()
 
 
 if __name__ == "__main__":
