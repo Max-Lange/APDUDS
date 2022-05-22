@@ -95,7 +95,6 @@ def cleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
     return nodes, filtered_edges
 
 
-
 def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
     """_summary_
 
@@ -143,6 +142,13 @@ def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
 
             # Special case for the last edge
             new_edges.loc[len(new_edges)] = [index_i, line["to"], new_length]
+
+    ruined_edges = new_edges.copy()
+    edges_melted = ruined_edges[["from", "to"]].melt(var_name='columns', value_name='index')
+    edges_melted["index"] = edges_melted["index"].astype(int)
+    nodes["connections"] = edges_melted["index"].value_counts().sort_index()
+
+    edges[["from", "to"]] = edges[["from", "to"]].astype(int)
 
     return nodes, new_edges
 

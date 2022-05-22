@@ -323,9 +323,7 @@ def inflow(nodes: pd.DataFrame, settings: dict):
         DataFrame: nodes data with added inflow rates
     """
 
-    nodes["inflow"] = nodes["area"] * settings["rainfall"] * (settings["perc_hard"] / 100)
-
-    return nodes
+    return nodes["area"] * (settings["rainfall"] / (10**7)) * (settings["perc_inp"] / 100)
 
 
 def diameter_calc(edges: pd.DataFrame, diam_list: list[float]):
@@ -350,10 +348,15 @@ def diameter_calc(edges: pd.DataFrame, diam_list: list[float]):
         else:
             precise_diam = 2 * np.sqrt(flow / np.pi)
 
-            for j, size in enumerate(diam_list):
-                if size - precise_diam > 0:
+            if precise_diam > diam_list[-1]:
+                edges.at[i, "diameter"] = diam_list[-1]
 
-                    edges.at[i, "diameter"] = diam_list[j]
+            else:
+                for j, size in enumerate(diam_list):
+                    if size - precise_diam > 0:
+                        edges.at[i, "diameter"] = diam_list[j]
+
+                        break
 
     return edges
 
@@ -367,7 +370,7 @@ def tester():
     nodes = pd.read_csv("test_nodes_2.csv")
     edges = pd.read_csv("test_edges_2.csv")
     settings = {"outfall":36, "overflow":1, "min_depth":1.1, "min_slope":1/500,
-                "rainfall": 70, "perc_hard": 25}
+                "rainfall": 70, "perc_inp": 25}
     diam_list = [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3]
 
     nodes, _ = voronoi_area(nodes, box_extent=50)

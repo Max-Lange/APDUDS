@@ -17,9 +17,9 @@ This file contains the following modules:
 
 import warnings
 from osm_extractor import extractor, cleaner, splitter
-from plotter import network_plotter, voronoi_plotter
+from plotter import network_plotter, voronoi_plotter, height_contour_plotter
 from terminal import greeting, step_2_input
-from attribute_calculator import voronoi_area
+from attribute_calculator import voronoi_area, flow_and_height_new, flow_amount, diameter_calc
 from matplotlib import pyplot as plt
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -50,13 +50,29 @@ def step_1(coords: list[float], space: int):
 
     return area_nodes, split_edges
 
+
+def step_2(nodes, edges, settings):
+
+    nodes, edges = flow_and_height_new(nodes, edges, settings)
+    nodes, edges = flow_amount(nodes, edges, settings)
+    edges = diameter_calc(edges, settings["diam_list"])
+
+    _ = plt.figure()
+    height_contour_plotter(nodes, edges, 111)
+
+    plt.show()
+
+    return nodes, edges
+
+
 def main():
     """Running this function starts the software in its entirety
     """
 
     coords, space = greeting()
-    _, _ = step_1(coords, space)
-    _ = step_2_input()
+    nodes, edges = step_1(coords, space)
+    settings = step_2_input()
+    _, _ = step_2(nodes, edges, settings)
 
 
 def tester():
@@ -66,7 +82,17 @@ def tester():
     test_coords = [51.9293, 51.9207, 4.8378, 4.8176]
     test_space = 100
 
-    step_1(test_coords, test_space)
+    nodes, edges = step_1(test_coords, test_space)
+
+    print(nodes, edges)
+
+    settings = {"outfall":36, "overflow":1, "min_depth":1.1, "min_slope":1/500,
+                "rainfall": 70, "perc_inp": 70, "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]}
+
+    nodes, edges  = step_2(nodes, edges, settings)
+    print(nodes, edges)
+    print(edges.diameter.max())
+
 
 if __name__ == "__main__":
     tester()

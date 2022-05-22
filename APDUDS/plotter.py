@@ -72,11 +72,6 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
     axes.plot(nodes.loc[outfall, "x"], nodes.loc[outfall, "y"], "ro")
     axes.plot(nodes.loc[overflow, "x"], nodes.loc[overflow, "y"], "ro")
 
-    print(nodes.loc[overflow, "depth"])
-    print(nodes.depth.min())
-    print(nodes.loc[outfall, "depth"])
-    print(nodes.depth.max())
-
     for _, line in edges.iterrows():
         x_coord = [nodes.iloc[int(line["from"])]["x"], nodes.iloc[int(line["to"])]["x"]]
         y_coord = [nodes.iloc[int(line["from"])]["y"], nodes.iloc[int(line["to"])]["y"]]
