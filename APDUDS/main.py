@@ -46,10 +46,9 @@ def step_1(coords: list[float], space: int):
     # Create a plot of the vornoi catchement areas
     voronoi_plotter(area_nodes, voro, 223)
 
-    plt.show(block=False)
+    plt.show()
 
     return area_nodes, split_edges
-
 
 def main():
     """Running this function starts the software in its entirety
@@ -65,7 +64,7 @@ def tester():
     """
 
     test_coords = [51.9293, 51.9207, 4.8378, 4.8176]
-    test_space = 50
+    test_space = 100
 
     step_1(test_coords, test_space)
 

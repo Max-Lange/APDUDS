@@ -50,3 +50,37 @@ def voronoi_plotter(nodes: DataFrame, voro, subplot_number: int):
     axes = plt.subplot(subplot_number)
     voro.plot(ax=axes)
     axes.scatter(points[:, 0], points[:, 1])
+
+
+def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:int):
+    """Creates a subplot of a contourmap of the depth of the nodes, with the conduit
+    network laid overtop.
+
+    Args:
+        nodes (DataFrame): The nodes of the system along with their attributes
+        edges (DataFrame): The conduits of the system along with their attributes
+        subplot_number (int): Ax to plot to
+    """
+
+    axes = plt.subplot(subplot_number)
+
+    axes.plot(nodes.x, nodes.y, 'bo')
+
+    outfall = nodes.index[nodes['role'] == "outfall"].tolist()[0]
+    overflow = nodes.index[nodes['role'] == "overflow"].tolist()[0]
+
+    axes.plot(nodes.loc[outfall, "x"], nodes.loc[outfall, "y"], "ro")
+    axes.plot(nodes.loc[overflow, "x"], nodes.loc[overflow, "y"], "ro")
+
+    print(nodes.loc[overflow, "depth"])
+    print(nodes.depth.min())
+    print(nodes.loc[outfall, "depth"])
+    print(nodes.depth.max())
+
+    for _, line in edges.iterrows():
+        x_coord = [nodes.iloc[int(line["from"])]["x"], nodes.iloc[int(line["to"])]["x"]]
+        y_coord = [nodes.iloc[int(line["from"])]["y"], nodes.iloc[int(line["to"])]["y"]]
+        plt.plot(x_coord, y_coord, "b")
+
+    axes.tricontourf(nodes.x, nodes.y, nodes.depth)
+    plt.margins(0.1)

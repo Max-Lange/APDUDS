@@ -109,7 +109,7 @@ def greeting():
 
     space = gully_space_input()
 
-    print("The pipe network and gully distribution for the area you selected will\
+    print("\nThe pipe network and gully distribution for the area you selected will\
 now be calculated.\n A set of figures will appear.\
 Close this figure once you are ready to proceed.")
 

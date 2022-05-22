@@ -36,6 +36,7 @@ def extractor(coords: list, aggregation_size=10):
 
     # Download osm data, reproject into meter-using coordinate system, consolidate nearby nodes
     osm_map = ox.graph_from_bbox(coords[0], coords[1], coords[2], coords[3], network_type="drive")
+
     osm_projected = ox.project_graph(osm_map)
     osm_consolidated = ox.consolidate_intersections(osm_projected,
                                                     tolerance=aggregation_size,
@@ -49,8 +50,11 @@ def extractor(coords: list, aggregation_size=10):
     # Create new nodes and edges dataframe which only contain the wanted data
     int_from = [int(edges_reset.u[i]) for i in range(len(edges_reset))]
     int_to = [int(edges_reset.v[i]) for i in range(len(edges_reset))]
-    edges = pd.DataFrame({"from":int_from, "to":int_to, "length":edges_reset.length})
-    nodes = pd.DataFrame({"x":nodes_reset.x, "y":nodes_reset.y})
+    edges = pd.DataFrame({"from":int_from,
+                          "to":int_to,
+                          "length":edges_reset.length})
+    nodes = pd.DataFrame({"x":nodes_reset.x,
+                          "y":nodes_reset.y,})
 
     return nodes, edges
 
@@ -77,7 +81,7 @@ def cleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
     nodes.x = nodes.x - (nodes.x.max() / 2)
     nodes.y = nodes.y - (nodes.y.max() / 2)
 
-    # Duplicate edges or nodes may exist. These need to be filtered out
+    # Duplicate edges may exist. These need to be filtered out
     combos = []
     filtered_edges = pd.DataFrame(columns=["from", "to", "length"])
     for _, line in edges.iterrows():
@@ -87,7 +91,6 @@ def cleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
             if combo not in combos:
                 filtered_edges.loc[len(filtered_edges)] = [line["from"], line["to"], line["length"]]
                 combos.append(combo)
-
 
     return nodes, filtered_edges
 
@@ -146,8 +149,20 @@ def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
 
 def main():
     """Only used for testing purposes"""
-    # nodes, edges = extractor([51.9293, 51.9207, 4.8378, 4.8176])
+    nodes, edges = extractor([51.9293, 51.9207, 4.8378, 4.8176])
+    nodes, edges = cleaner(nodes, edges)
+    nodes, edges = splitter(nodes, edges, 150)
 
+    ruined_edges = edges.copy()
+    edges_melted = ruined_edges[["from", "to"]].melt(var_name='columns', value_name='index')
+    edges_melted["index"] = edges_melted["index"].astype(int)
+    nodes["connections"] = edges_melted["index"].value_counts().sort_index()
+
+    edges[["from", "to"]] = edges[["from", "to"]].astype(int)
+
+
+    nodes.to_csv("test_nodes_2.csv")
+    edges.to_csv("test_edges_2.csv")
 
 if __name__ == "__main__":
     main()
