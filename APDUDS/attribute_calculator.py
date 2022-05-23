@@ -70,23 +70,23 @@ def flow_and_height_original(nodes: pd.DataFrame, edges: pd.DataFrame, settings:
     main_path = nx.dijkstra_path(graph, settings["overflow"], settings["outfall"])
     main_path = [int(x) for x in main_path]
 
+    edge_set = [set([edges["from"][i], edges["to"][i]]) for i in range(len(edges))]
     nodes.loc[main_path, "considered"] = True
-    nodes = set_depth(nodes, edges, main_path, settings["min_slope"])
-
+    nodes = set_depth(nodes, edges, main_path, settings["min_slope"], edge_set)
 
     i = 1
     while not nodes["considered"].all():
         leaf_nodes = nodes.index[nodes.connections == i].tolist()
 
         for node in leaf_nodes:
-            if not nodes.loc[node, "considered"]:
+            if not nodes.at[node, "considered"]:
                 path = determine_path(graph, node, main_path)
                 nodes.loc[path, "considered"] = True
 
                 main_index = main_path.index(path[-1])
                 path.extend(main_path[main_index+1:])
 
-                nodes = set_depth(nodes, edges, path, settings["min_slope"])
+                nodes = set_depth(nodes, edges, path, settings["min_slope"], edge_set)
         i += 1
 
     return nodes, edges
@@ -114,17 +114,18 @@ def flow_and_height_new(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict)
     nodes, edges, graph = intialize(nodes, edges, settings)
     nodes.loc[end_point, "considered"] = True
 
+    edge_set = [set([edges["from"][i], edges["to"][i]]) for i in range(len(edges))]
     i = 1
     while not nodes["considered"].all():
         leaf_nodes = nodes.index[nodes.connections == i].tolist()
 
         for node in leaf_nodes:
-            if not nodes.loc[node, "considered"]:
+            if not nodes.at[node, "considered"]:
                 path = determine_path_new(graph, node, end_point)
                 nodes = set_paths(nodes, path)
 
                 nodes.loc[path, "considered"] = True
-                nodes = set_depth(nodes, edges, path, settings["min_slope"])
+                nodes = set_depth(nodes, edges, path, settings["min_slope"], edge_set)
         i += 1
 
     edges = reset_direction(nodes, edges)
@@ -151,8 +152,13 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     nodes["depth"] = settings["min_depth"]
     nodes["role"] = "node"
     nodes["path"] = None
-    nodes.loc[settings["outfall"], "role"] = "outfall"
-    nodes.loc[settings["overflow"], "role"] = "overflow"
+    nodes.at[settings["outfall"], "role"] = "outfall"
+    nodes.at[settings["overflow"], "role"] = "overflow"
+
+    ruined_edges = edges.copy()
+    edges_melted = ruined_edges[["from", "to"]].melt(var_name='columns', value_name='index')
+    edges_melted["index"] = edges_melted["index"].astype(int)
+    nodes["connections"] = edges_melted["index"].value_counts().sort_index()
 
     graph = nx.Graph()
     graph.add_nodes_from(list(nodes.index.values))
@@ -163,7 +169,8 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     return nodes, edges, graph
 
 
-def set_depth(nodes: pd.DataFrame, edges: pd.DataFrame, path: list, min_slope: float):
+def set_depth(nodes: pd.DataFrame, edges: pd.DataFrame,
+path: list, min_slope: float, edge_set: list[set[int]]):
     """Set the depth of the nodes along a certain route using the given minimum slope.
     It calculates the distance between the nodes using conduit lenghts, and lowers the end
     point such that it satisfies the minimum slope.
@@ -179,18 +186,18 @@ def set_depth(nodes: pd.DataFrame, edges: pd.DataFrame, path: list, min_slope: f
         DataFrame: The nodes dataframe with updated depths for the nodes along the given path
     """
 
-    edge_set = [set([edges["from"][i], edges["to"][i]]) for i in range(len(edges))]
+
 
     for i in range(len(path) - 1):
         from_node = path[i]
         to_node = path[i+1]
 
-        from_depth = nodes.loc[from_node, "depth"]
-        length = edges.loc[edge_set.index(set([from_node, to_node])), "length"]
+        from_depth = nodes.at[from_node, "depth"]
+        length = edges.at[edge_set.index(set([from_node, to_node])), "length"]
         new_to_depth = from_depth + min_slope * length
 
-        if new_to_depth > nodes.loc[to_node, "depth"]:
-            nodes.loc[to_node, "depth"] = new_to_depth
+        if new_to_depth > nodes.at[to_node, "depth"]:
+            nodes.at[to_node, "depth"] = new_to_depth
 
     return nodes
 
@@ -272,8 +279,8 @@ def reset_direction(nodes: pd.DataFrame, edges: pd.DataFrame):
     """
 
     for i, edge in edges.iterrows():
-        if nodes.loc[edge["from"], "depth"] > nodes.loc[edge["to"], "depth"]:
-            edges.loc[i, "from"], edges.loc[i, "to"] = edge["to"], edge["from"]
+        if nodes.at[edge["from"], "depth"] > nodes.at[edge["to"], "depth"]:
+            edges.at[i, "from"], edges.at[i, "to"] = edge["to"], edge["from"]
 
     return edges
 
@@ -303,6 +310,7 @@ def flow_amount(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     for _, node in nodes.iterrows():
         path = node["path"]
 
+        # Can this not be simplified to a generator expression and a .loc?
         for j in range(len(path)-1):
             edge = set([path[j], path[j+1]])
 
@@ -361,6 +369,36 @@ def diameter_calc(edges: pd.DataFrame, diam_list: list[float]):
     return edges
 
 
+def recleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
+    """Round of calculated values to realistic decimal precisions, and drop columns
+    which were added for intermediate calculations
+
+    Args:
+        nodes (DataFrame): The nodes of the system along with their attributes
+        edges (DataFrame): The conduits of the system along with their attributes
+
+    Returns:
+        tuple[DataFrame, DataFrame]: Cleaned up nodes and edges data
+    """
+
+    nodes = nodes.drop(columns=["considered", "path", "connections"])
+
+    # cm precision for x, y and depth
+    # m^2 precision for area
+    # L precision for inflow
+    nodes.x = nodes.x.round(decimals=2)
+    nodes.y = nodes.y.round(decimals=2)
+    nodes.area = nodes.area.round(decimals=0)
+    nodes.depth = nodes.depth.round(decimals=2)
+    nodes.inflow = nodes.inflow.round(decimals=3)
+
+    # cm precision for length
+    # L precision for flow
+    edges.length = edges.length.round(decimals=2)
+    edges.flow = edges.flow.round(decimals=3)
+
+    return nodes, edges
+
 
 def tester():
     """Only used for testing purposes
@@ -369,17 +407,17 @@ def tester():
     from plotter import height_contour_plotter, diameter_map
     nodes = pd.read_csv("test_nodes_2.csv")
     edges = pd.read_csv("test_edges_2.csv")
-    settings = {"outfall":36, "overflow":1, "min_depth":1.1, "min_slope":1/500,
+    settings = {"outfall":86, "overflow":1, "min_depth":1.1, "min_slope":1/500,
                 "rainfall": 70, "perc_inp": 25}
     diam_list = [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3]
 
     nodes, _ = voronoi_area(nodes, box_extent=50)
     nodes, edges = flow_and_height_new(nodes, edges, settings)
     nodes, edges = flow_amount(nodes, edges, settings)
-
     edges = diameter_calc(edges, diam_list)
-    print(nodes, edges)
+    nodes, edges = recleaner(nodes, edges)
 
+    print(nodes, edges)
     _ = plt.figure()
 
     height_contour_plotter(nodes, edges, 121)

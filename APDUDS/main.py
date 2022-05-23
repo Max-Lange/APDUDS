@@ -17,7 +17,7 @@ This file contains the following modules:
 
 import warnings
 from osm_extractor import extractor, cleaner, splitter
-from plotter import network_plotter, voronoi_plotter, height_contour_plotter
+from plotter import network_plotter, voronoi_plotter, height_contour_plotter, diameter_map
 from terminal import greeting, step_2_input
 from attribute_calculator import voronoi_area, flow_and_height_new, flow_amount, diameter_calc
 from matplotlib import pyplot as plt
@@ -40,9 +40,9 @@ def step_1(coords: list[float], space: int):
 
     _ = plt.figure()
     # Create a plot for the downloaded road network
-    network_plotter(filtered_nodes, filtered_edges, 221)
+    network_plotter(filtered_nodes, filtered_edges, 111)
     # Create a plot for the split road network
-    network_plotter(split_nodes, split_edges, 222)
+    network_plotter(split_nodes, split_edges, 111, numbered=True)
     # Create a plot of the vornoi catchement areas
     voronoi_plotter(area_nodes, voro, 223)
 
@@ -70,7 +70,8 @@ def step_2(nodes, edges, settings: dict):
     edges = diameter_calc(edges, settings["diam_list"])
 
     _ = plt.figure()
-    height_contour_plotter(nodes, edges, 111)
+    height_contour_plotter(nodes, edges, 121)
+    diameter_map(nodes, edges, 122)
 
     plt.show()
 
@@ -98,7 +99,7 @@ def tester():
 
     print(nodes, edges)
 
-    settings = {"outfall":36, "overflow":1, "min_depth":1.1, "min_slope":1/500,
+    settings = {"outfall":130, "overflow":1, "min_depth":1.1, "min_slope":1/500,
                 "rainfall": 70, "perc_inp": 70, "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]}
 
     nodes, edges  = step_2(nodes, edges, settings)

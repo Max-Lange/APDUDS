@@ -81,6 +81,9 @@ def cleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
     nodes.x = nodes.x - (nodes.x.max() / 2)
     nodes.y = nodes.y - (nodes.y.max() / 2)
 
+    nodes.x = nodes.x.round(decimals=2)
+    nodes.y = nodes.y.round(decimals=2)
+
     # Duplicate edges may exist. These need to be filtered out
     combos = []
     filtered_edges = pd.DataFrame(columns=["from", "to", "length"])
@@ -92,6 +95,8 @@ def cleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
                 filtered_edges.loc[len(filtered_edges)] = [line["from"], line["to"], line["length"]]
                 combos.append(combo)
 
+    filtered_edges.length = filtered_edges.length.round(decimals=2)
+    filtered_edges[["from", "to"]] = filtered_edges[["from", "to"]].astype(int)
     return nodes, filtered_edges
 
 
@@ -143,13 +148,10 @@ def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
             # Special case for the last edge
             new_edges.loc[len(new_edges)] = [index_i, line["to"], new_length]
 
-    ruined_edges = new_edges.copy()
-    edges_melted = ruined_edges[["from", "to"]].melt(var_name='columns', value_name='index')
-    edges_melted["index"] = edges_melted["index"].astype(int)
-    nodes["connections"] = edges_melted["index"].value_counts().sort_index()
-
-    edges[["from", "to"]] = edges[["from", "to"]].astype(int)
-
+    nodes.x = nodes.x.round(decimals=2)
+    nodes.y = nodes.y.round(decimals=2)
+    new_edges.length = new_edges.length.round(decimals=2)
+    new_edges[["from", "to"]] = new_edges[["from", "to"]].astype(int)
     return nodes, new_edges
 
 
@@ -158,14 +160,6 @@ def main():
     nodes, edges = extractor([51.9293, 51.9207, 4.8378, 4.8176])
     nodes, edges = cleaner(nodes, edges)
     nodes, edges = splitter(nodes, edges, 150)
-
-    ruined_edges = edges.copy()
-    edges_melted = ruined_edges[["from", "to"]].melt(var_name='columns', value_name='index')
-    edges_melted["index"] = edges_melted["index"].astype(int)
-    nodes["connections"] = edges_melted["index"].value_counts().sort_index()
-
-    edges[["from", "to"]] = edges[["from", "to"]].astype(int)
-
 
     nodes.to_csv("test_nodes_2.csv")
     edges.to_csv("test_edges_2.csv")

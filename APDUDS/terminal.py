@@ -11,8 +11,8 @@ functions:
     * yes_no_choice - Presents a yes no [y/n] input space to the user
     * coords_input - Presents a space for the user to input the wanted coords of the
     desired bounding box
-    * gully_space_input - Presents a space for the user to input the maximum
-    allowable gully spacing
+    * manhole_space_input - Presents a space for the user to input the maximum
+    allowable manhole spacing
     * greeting - Presents the user with the program greeting, and contains the first input step
 """
 
@@ -74,26 +74,26 @@ def coords_input() -> list[float]:
     return coords
 
 
-def gully_space_input() -> int:
-    """Present the user with a space to input the maximum allowable gully spacing
+def manhole_space_input() -> int:
+    """Present the user with a space to input the maximum allowable manhole spacing
 
     Returns:
-        int: maximum allowable gully spacing (in [m])
+        int: maximum allowable manhole spacing (in [m])
     """
 
     try:
-        space = int(input("Maximum allowable gully spacing: "))
+        space = int(input("Maximum allowable manhole spacing: "))
 
     except ValueError:
         print("\nThe input was not in the correct format (ex: 20)\nPlease try again:\n")
-        space = gully_space_input()
+        space = manhole_space_input()
 
     return space
 
 
 def greeting():
     """Present the user with a greeting, followed by a space for the user to enter the
-    coordinates of the wanted bounding box, and maximum gully spacing
+    coordinates of the wanted bounding box, and maximum manhole spacing
     """
 
     print("\nWelcome To APDUDS!\n\n\
@@ -104,10 +104,10 @@ def greeting():
 
     coords = coords_input()
 
-    print("\nFor creating intermediate gullies, the maximum allowable space between\
- these gullies is needed.\nPlease specify this distance (in meters) (example: 20)\n")
+    print("\nFor creating intermediate manholes, the maximum allowable space between\
+ these manholes is needed.\nPlease specify this distance (in meters) (example: 20)\n")
 
-    space = gully_space_input()
+    space = manhole_space_input()
 
     print("\nThe pipe network and manhole distribution for the area you selected will\
 now be calculated.\n A set of figures will appear. \
