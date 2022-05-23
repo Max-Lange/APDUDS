@@ -36,6 +36,7 @@ def extractor(coords: list, aggregation_size=10):
 
     # Download osm data, reproject into meter-using coordinate system, consolidate nearby nodes
     osm_map = ox.graph_from_bbox(coords[0], coords[1], coords[2], coords[3], network_type="drive")
+
     osm_projected = ox.project_graph(osm_map)
     osm_consolidated = ox.consolidate_intersections(osm_projected,
                                                     tolerance=aggregation_size,
@@ -49,8 +50,11 @@ def extractor(coords: list, aggregation_size=10):
     # Create new nodes and edges dataframe which only contain the wanted data
     int_from = [int(edges_reset.u[i]) for i in range(len(edges_reset))]
     int_to = [int(edges_reset.v[i]) for i in range(len(edges_reset))]
-    edges = pd.DataFrame({"from":int_from, "to":int_to, "length":edges_reset.length})
-    nodes = pd.DataFrame({"x":nodes_reset.x, "y":nodes_reset.y})
+    edges = pd.DataFrame({"from":int_from,
+                          "to":int_to,
+                          "length":edges_reset.length})
+    nodes = pd.DataFrame({"x":nodes_reset.x,
+                          "y":nodes_reset.y,})
 
     return nodes, edges
 
@@ -77,7 +81,10 @@ def cleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
     nodes.x = nodes.x - (nodes.x.max() / 2)
     nodes.y = nodes.y - (nodes.y.max() / 2)
 
-    # Duplicate edges or nodes may exist. These need to be filtered out
+    nodes.x = nodes.x.round(decimals=2)
+    nodes.y = nodes.y.round(decimals=2)
+
+    # Duplicate edges may exist. These need to be filtered out
     combos = []
     filtered_edges = pd.DataFrame(columns=["from", "to", "length"])
     for _, line in edges.iterrows():
@@ -88,9 +95,9 @@ def cleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
                 filtered_edges.loc[len(filtered_edges)] = [line["from"], line["to"], line["length"]]
                 combos.append(combo)
 
-
+    filtered_edges.length = filtered_edges.length.round(decimals=2)
+    filtered_edges[["from", "to"]] = filtered_edges[["from", "to"]].astype(int)
     return nodes, filtered_edges
-
 
 
 def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
@@ -141,13 +148,21 @@ def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
             # Special case for the last edge
             new_edges.loc[len(new_edges)] = [index_i, line["to"], new_length]
 
+    nodes.x = nodes.x.round(decimals=2)
+    nodes.y = nodes.y.round(decimals=2)
+    new_edges.length = new_edges.length.round(decimals=2)
+    new_edges[["from", "to"]] = new_edges[["from", "to"]].astype(int)
     return nodes, new_edges
 
 
 def main():
     """Only used for testing purposes"""
-    # nodes, edges = extractor([51.9293, 51.9207, 4.8378, 4.8176])
+    nodes, edges = extractor([51.9293, 51.9207, 4.8378, 4.8176])
+    nodes, edges = cleaner(nodes, edges)
+    nodes, edges = splitter(nodes, edges, 150)
 
+    nodes.to_csv("test_nodes_2.csv")
+    edges.to_csv("test_edges_2.csv")
 
 if __name__ == "__main__":
     main()

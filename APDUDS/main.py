@@ -17,9 +17,9 @@ This file contains the following modules:
 
 import warnings
 from osm_extractor import extractor, cleaner, splitter
-from plotter import network_plotter, voronoi_plotter
+from plotter import network_plotter, voronoi_plotter, height_contour_plotter, diameter_map
 from terminal import greeting, step_2_input
-from attribute_calculator import voronoi_area
+from attribute_calculator import voronoi_area, flow_and_height_new, flow_amount, diameter_calc
 from matplotlib import pyplot as plt
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -40,15 +40,42 @@ def step_1(coords: list[float], space: int):
 
     _ = plt.figure()
     # Create a plot for the downloaded road network
-    network_plotter(filtered_nodes, filtered_edges, 221)
+    network_plotter(filtered_nodes, filtered_edges, 111)
     # Create a plot for the split road network
-    network_plotter(split_nodes, split_edges, 222)
+    network_plotter(split_nodes, split_edges, 111, numbered=True)
     # Create a plot of the vornoi catchement areas
     voronoi_plotter(area_nodes, voro, 223)
 
-    plt.show(block=False)
+    plt.show()
 
     return area_nodes, split_edges
+
+
+def step_2(nodes, edges, settings: dict):
+    """Runs the second section of the calculations, which constists of the
+    attribute calculations. Also displays a number of graph to the user
+
+    Args:
+        nodes (DataFrame): The nodes of the system along with their attributes
+        edges (DataFrame): The conduits of the system along with their attributes
+        settings (dict): Input parameters for the calculations
+
+    Returns:
+        tuple[DataFrame, DataFrame]: Nodes and conduits with calculated and updated
+        attributes
+    """
+
+    nodes, edges = flow_and_height_new(nodes, edges, settings)
+    nodes, edges = flow_amount(nodes, edges, settings)
+    edges = diameter_calc(edges, settings["diam_list"])
+
+    _ = plt.figure()
+    height_contour_plotter(nodes, edges, 121)
+    diameter_map(nodes, edges, 122)
+
+    plt.show()
+
+    return nodes, edges
 
 
 def main():
@@ -56,8 +83,9 @@ def main():
     """
 
     coords, space = greeting()
-    _, _ = step_1(coords, space)
-    _ = step_2_input()
+    nodes, edges = step_1(coords, space)
+    settings = step_2_input()
+    _, _ = step_2(nodes, edges, settings)
 
 
 def tester():
@@ -65,9 +93,19 @@ def tester():
     """
 
     test_coords = [51.9293, 51.9207, 4.8378, 4.8176]
-    test_space = 50
+    test_space = 100
 
-    step_1(test_coords, test_space)
+    nodes, edges = step_1(test_coords, test_space)
+
+    print(nodes, edges)
+
+    settings = {"outfall":130, "overflow":1, "min_depth":1.1, "min_slope":1/500,
+                "rainfall": 70, "perc_inp": 70, "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]}
+
+    nodes, edges  = step_2(nodes, edges, settings)
+    print(nodes, edges)
+    print(edges.diameter.max())
+
 
 if __name__ == "__main__":
     tester()

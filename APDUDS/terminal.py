@@ -11,8 +11,8 @@ functions:
     * yes_no_choice - Presents a yes no [y/n] input space to the user
     * coords_input - Presents a space for the user to input the wanted coords of the
     desired bounding box
-    * gully_space_input - Presents a space for the user to input the maximum
-    allowable gully spacing
+    * manhole_space_input - Presents a space for the user to input the maximum
+    allowable manhole spacing
     * greeting - Presents the user with the program greeting, and contains the first input step
 """
 
@@ -74,26 +74,26 @@ def coords_input() -> list[float]:
     return coords
 
 
-def gully_space_input() -> int:
-    """Present the user with a space to input the maximum allowable gully spacing
+def manhole_space_input() -> int:
+    """Present the user with a space to input the maximum allowable manhole spacing
 
     Returns:
-        int: maximum allowable gully spacing (in [m])
+        int: maximum allowable manhole spacing (in [m])
     """
 
     try:
-        space = int(input("Maximum allowable gully spacing: "))
+        space = int(input("Maximum allowable manhole spacing: "))
 
     except ValueError:
         print("\nThe input was not in the correct format (ex: 20)\nPlease try again:\n")
-        space = gully_space_input()
+        space = manhole_space_input()
 
     return space
 
 
 def greeting():
     """Present the user with a greeting, followed by a space for the user to enter the
-    coordinates of the wanted bounding box, and maximum gully spacing
+    coordinates of the wanted bounding box, and maximum manhole spacing
     """
 
     print("\nWelcome To APDUDS!\n\n\
@@ -104,14 +104,14 @@ def greeting():
 
     coords = coords_input()
 
-    print("\nFor creating intermediate gullies, the maximum allowable space between\
- these gullies is needed.\nPlease specify this distance (in meters) (example: 20)\n")
+    print("\nFor creating intermediate manholes, the maximum allowable space between\
+ these manholes is needed.\nPlease specify this distance (in meters) (example: 20)\n")
 
-    space = gully_space_input()
+    space = manhole_space_input()
 
-    print("The pipe network and gully distribution for the area you selected will\
-now be calculated.\n A set of figures will appear.\
-Close this figure once you are ready to proceed.")
+    print("\nThe pipe network and manhole distribution for the area you selected will\
+now be calculated.\n A set of figures will appear. \
+Close these figures once you are ready to proceed.")
 
     return coords, space
 
@@ -119,22 +119,41 @@ def step_2_input():
     """Present the user with the input space for the burring depth parameters
     """
 
-    print("\nNow that the Network has been generated, some actual UDS attributes can be\n\
-Calculated. Please enter the required information to enable these calculation steps:")
+    print("\nNow that the network has been generated, some attributes can be calculated.\n\
+Please enter the described information to enable these calculation steps:")
 
-    print("\n\nPlease enter the index of the point you want to designate as an outfall point:")
+    print("\n\nPlease enter the index of the point you want to designate as an outfall point:\n\
+(Should be a positive integer, for example: 36)\n")
     outfall = int(input("Outflow point index: "))
 
-    print("\n\nNow do the same for the outfall point:")
+    print("\n\nNow do the same for the outfall point:\n\
+(Should be a positive integer, for example: 112)\n")
     overflow = int(input("Overflow point index: "))
 
-    print("\n\nEnter the minimum depth below the ground at which pipes can be installed:")
+    print("\n\nEnter the minimum depth below the ground at which pipes can be installed:\n\
+(Should be a positive integer or decimal number, for example: 1.1)\n")
     min_depth = float(input("Minimum installation depth [m]: "))
 
-    print("\n\nEnter the minimum slope for the pipes: ")
+    print("\n\nEnter the minimum slope for the pipes:\n\
+(Should be a decimal number between (but not including!) 0 and 1, for example: 0.002)\n")
     min_slope = float(input("Minimum slope [-]: "))
 
-    return {"outfall":outfall, "overflow":overflow, "min_depth":min_depth, "min_slope":min_slope}
+    print("\n\nEnter the design storm rainfall:\n\
+(Should be a positive integer, for example: 70)\n")
+    rainfall = int(input("The design storm rainfall [L/s/ha]: "))
+
+    print("\n\nThe average percentage of inpervious ground coverage of the area:\n\
+(Should be a positive integer number between 0 and 100, for example: 25)\n")
+    perc_inp = int(input("Percentage of impervious ground [%]: "))
+
+    print("\n\nA list of the available diameters of the conduits:\n\
+(Should be a series of number seperated by spaces, for example: 150 300 500 1000)\n")
+    diam_list = input("List of available diameters: ").split()
+    diam_list = [int(x) / 1000 for x in diam_list]
+
+    return {"outfall":outfall, "overflow":overflow, "min_depth":min_depth,
+            "min_slope":min_slope, "rainfall":rainfall, "perc_inp": perc_inp,
+            "diam_list": diam_list}
 
 
 def main():
