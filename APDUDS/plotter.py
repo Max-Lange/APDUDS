@@ -69,13 +69,38 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
     outfall = nodes.index[nodes['role'] == "outfall"].tolist()[0]
     overflow = nodes.index[nodes['role'] == "overflow"].tolist()[0]
 
-    axes.plot(nodes.loc[outfall, "x"], nodes.loc[outfall, "y"], "ro")
-    axes.plot(nodes.loc[overflow, "x"], nodes.loc[overflow, "y"], "ro")
-
     for _, line in edges.iterrows():
         x_coord = [nodes.iloc[int(line["from"])]["x"], nodes.iloc[int(line["to"])]["x"]]
         y_coord = [nodes.iloc[int(line["from"])]["y"], nodes.iloc[int(line["to"])]["y"]]
         plt.plot(x_coord, y_coord, "b")
 
+    axes.plot(nodes.loc[outfall, "x"], nodes.loc[outfall, "y"], "ro")
+    axes.plot(nodes.loc[overflow, "x"], nodes.loc[overflow, "y"], "ro")
+
     axes.tricontourf(nodes.x, nodes.y, nodes.depth)
-    plt.margins(0.1)
+    plt.axis("scaled")
+
+
+def diameter_map(nodes: DataFrame, edges: DataFrame, subplot_number:int):
+    """Creates a subplot of the conduits of the system, with the line thickness corresponding to
+    the diameter size.
+
+    Args:
+        nodes (DataFrame): The nodes of the system along with their attributes
+        edges (DataFrame): The conduits of the system along with their attributes
+        diam_list (list[float]): List of the viable diameters (in [m])
+        subplot_number (int): Ax to plot to
+    """
+
+    axes = plt.subplot(subplot_number)
+    scalar = edges.diameter.max()
+
+    for _, line in edges.iterrows():
+        x_coord = [nodes.iloc[int(line["from"])]["x"], nodes.iloc[int(line["to"])]["x"]]
+        y_coord = [nodes.iloc[int(line["from"])]["y"], nodes.iloc[int(line["to"])]["y"]]
+        plt.plot(x_coord, y_coord, "#1f77b4", linewidth=line["diameter"] * 8 / scalar)
+
+    outfall = nodes.index[nodes['role'] == "outfall"].tolist()[0]
+    axes.plot(nodes.loc[outfall, "x"], nodes.loc[outfall, "y"], "ro")
+
+    plt.axis("scaled")

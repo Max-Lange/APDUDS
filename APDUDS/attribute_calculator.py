@@ -366,7 +366,7 @@ def tester():
     """Only used for testing purposes
     """
     from matplotlib import pyplot as plt
-    from plotter import height_contour_plotter
+    from plotter import height_contour_plotter, diameter_map
     nodes = pd.read_csv("test_nodes_2.csv")
     edges = pd.read_csv("test_edges_2.csv")
     settings = {"outfall":36, "overflow":1, "min_depth":1.1, "min_slope":1/500,
@@ -382,7 +382,9 @@ def tester():
 
     _ = plt.figure()
 
-    height_contour_plotter(nodes, edges, 111)
+    height_contour_plotter(nodes, edges, 121)
+    diameter_map(nodes, edges, 122)
+
 
     plt.show()
 

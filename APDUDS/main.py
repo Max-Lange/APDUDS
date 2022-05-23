@@ -51,7 +51,19 @@ def step_1(coords: list[float], space: int):
     return area_nodes, split_edges
 
 
-def step_2(nodes, edges, settings):
+def step_2(nodes, edges, settings: dict):
+    """Runs the second section of the calculations, which constists of the
+    attribute calculations. Also displays a number of graph to the user
+
+    Args:
+        nodes (DataFrame): The nodes of the system along with their attributes
+        edges (DataFrame): The conduits of the system along with their attributes
+        settings (dict): Input parameters for the calculations
+
+    Returns:
+        tuple[DataFrame, DataFrame]: Nodes and conduits with calculated and updated
+        attributes
+    """
 
     nodes, edges = flow_and_height_new(nodes, edges, settings)
     nodes, edges = flow_amount(nodes, edges, settings)
