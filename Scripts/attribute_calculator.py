@@ -63,12 +63,12 @@ def flow_and_height(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict):
 
     nodes = nodes.copy()
     edges = edges.copy()
-    end_points = settings["outfalls"]
 
     nodes, edges, graph = intialize(nodes, edges, settings)
+    end_points = settings["outfalls"]
     nodes.loc[end_points, "considered"] = True
-
     edge_set = [set([edges["from"][i], edges["to"][i]]) for i in range(len(edges))]
+
     i = 1
     while not nodes["considered"].all():
         leaf_nodes = nodes.index[nodes.connections == i].tolist()
@@ -81,6 +81,9 @@ def flow_and_height(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict):
                 nodes.loc[path, "considered"] = True
                 nodes = set_depth(nodes, edges, path, settings["min_slope"], edge_set)
         i += 1
+
+    if "max_slope" in settings:
+        nodes = uphold_max_slope(nodes, edges, edge_set, settings["max_slope"])
 
     edges = reset_direction(nodes, edges)
     return nodes, edges
@@ -122,38 +125,6 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     return nodes, edges, graph
 
 
-def set_depth(nodes: pd.DataFrame, edges: pd.DataFrame,
-path: list, min_slope: float, edge_set: list[set[int]]):
-    """Set the depth of the nodes along a certain route using the given minimum slope.
-    It calculates the distance between the nodes using conduit lenghts, and lowers the end
-    point such that it satisfies the minimum slope.
-
-    Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        edges (DataFrame): The conduits of the system along with their attributes
-        path (list): All the indicies of the nodes which the path passes through
-        (including start and end nodes)
-        min_slope (float): The value (1/distance [m]) for the minimum slope
-
-    Returns:
-        DataFrame: The nodes dataframe with updated depths for the nodes along the given path
-    """
-
-
-
-    for i in range(len(path) - 1):
-        from_node = path[i]
-        to_node = path[i+1]
-
-        from_depth = nodes.at[from_node, "depth"]
-        length = edges.at[edge_set.index(set([from_node, to_node])), "length"]
-        new_to_depth = from_depth + min_slope * length
-
-        if new_to_depth > nodes.at[to_node, "depth"]:
-            nodes.at[to_node, "depth"] = new_to_depth
-
-    return nodes
-
 def determine_path(graph: nx.Graph, start: int, ends: list[int]):
     """Determines the shortest path for a certain point to another point using
     Dijkstra's shortes path algorithm
@@ -194,6 +165,61 @@ def set_paths(nodes: pd.DataFrame, path: list):
 
         if not nodes.loc[node, "path"]:
             nodes.at[node, "path"] = path[i:]
+
+    return nodes
+
+
+def set_depth(nodes: pd.DataFrame, edges: pd.DataFrame,
+path: list, min_slope: float, edge_set: list[set[int]]):
+    """Set the depth of the nodes along a certain route using the given minimum slope.
+    It calculates the distance between the nodes using conduit lenghts, and lowers the end
+    point such that it satisfies the minimum slope.
+
+    Args:
+        nodes (DataFrame): The nodes of the system along with their attributes
+        edges (DataFrame): The conduits of the system along with their attributes
+        path (list): All the indicies of the nodes which the path passes through
+        (including start and end nodes)
+        min_slope (float): The value (1/distance [m]) for the minimum slope
+
+    Returns:
+        DataFrame: The nodes dataframe with updated depths for the nodes along the given path
+    """
+
+    for i in range(len(path) - 1):
+        from_node = path[i]
+        to_node = path[i+1]
+
+        from_depth = nodes.at[from_node, "depth"]
+        length = edges.at[edge_set.index(set([from_node, to_node])), "length"]
+        new_to_depth = from_depth + min_slope * length
+
+        if new_to_depth > nodes.at[to_node, "depth"]:
+            nodes.at[to_node, "depth"] = new_to_depth
+
+    return nodes
+
+def uphold_max_slope(nodes, edges, edge_set, max_slope):
+    """_summary_
+
+    Args:
+        nodes (_type_): _description_
+        max_slope (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    for _, node in nodes.iterrows():
+        path = node.path
+
+        for i in range(len(path)-1):
+            lower_node = path[-1-i]
+            higher_node = path[-2-i]
+            length = edges.at[edge_set.index(set([lower_node, higher_node])), "length"]
+
+            if nodes.at[lower_node, "depth"] - nodes.at[higher_node, "depth"] / length > max_slope:
+                nodes.at[higher_node, "depth"] = nodes.at[lower_node, "depth"] - length * max_slope
 
     return nodes
 
