@@ -71,7 +71,7 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
     axes.plot(nodes.x, nodes.y, 'bo')
 
     outfall = nodes.index[nodes['role'] == "outfall"].tolist()[0]
-    overflow = nodes.index[nodes['role'] == "overflow"].tolist()[0]
+    # overflow = nodes.index[nodes['role'] == "overflow"].tolist()[0]
 
     for _, line in edges.iterrows():
         x_coord = [nodes.at[int(line["from"]), "x"], nodes.at[int(line["to"]), "x"]]
@@ -79,7 +79,7 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
         plt.plot(x_coord, y_coord, "b")
 
     axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "ro")
-    axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "ro")
+    # axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "ro")
 
     axes.tricontourf(nodes.x, nodes.y, nodes.depth)
     plt.axis("scaled")

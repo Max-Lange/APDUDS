@@ -22,7 +22,7 @@ import numpy as np
 ox.config(use_cache=False)
 
 
-def extractor(coords: list, aggregation_size=10):
+def extractor(coords: list, aggregation_size=15):
     """Downloads the road network for the selected bounding box from OpenStreetMap using osmnx
 
     Args:

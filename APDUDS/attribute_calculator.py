@@ -109,7 +109,7 @@ def flow_and_height_new(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict)
 
     nodes = nodes.copy()
     edges = edges.copy()
-    end_point = settings["outfall"]
+    end_point = settings["outfall"][0]
 
     nodes, edges, graph = intialize(nodes, edges, settings)
     nodes.loc[end_point, "considered"] = True
@@ -152,7 +152,7 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     nodes["depth"] = settings["min_depth"]
     nodes["role"] = "node"
     nodes["path"] = None
-    nodes.at[settings["outfall"], "role"] = "outfall"
+    nodes.at[settings["outfall"][0], "role"] = "outfall"
     nodes.at[settings["overflow"], "role"] = "overflow"
 
     ruined_edges = edges.copy()
@@ -382,6 +382,7 @@ def recleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
     """
 
     nodes = nodes.drop(columns=["considered", "path", "connections"])
+    nodes.role[nodes.role == "overflow"] = "node"
 
     # cm precision for x, y and depth
     # m^2 precision for area
@@ -416,6 +417,7 @@ def tester():
     nodes, edges = flow_amount(nodes, edges, settings)
     edges = diameter_calc(edges, diam_list)
     nodes, edges = recleaner(nodes, edges)
+
 
     print(nodes, edges)
     _ = plt.figure()
