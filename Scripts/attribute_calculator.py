@@ -19,7 +19,7 @@ from freud.box import Box
 from freud.locality import Voronoi
 import numpy as np
 
-def voronoi_area(nodes: pd.DataFrame, box_extent: int = 10):
+def voronoi_area(nodes: pd.DataFrame, box_extent: int=10):
     """_summary_
 
     Args:
@@ -46,53 +46,7 @@ def voronoi_area(nodes: pd.DataFrame, box_extent: int = 10):
 
     return nodes, voro
 
-
-def flow_and_height_original(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
-    """Determines the direction of flow and needed installation height of the nodes based
-    on the given settings (minimum slope and position of the outfall and overflow nodes)
-
-    Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        edges (DataFrame): The conduits of the system along with their attributes
-        settings (dict): Values for the minimum slope, the minimum depth, and locations
-        of the outfall and overflow points
-
-    Returns:
-        tuple[DataFrame, DataFrame]: The nodes and conduits dataframes with the newly determined
-        flow direction and needed installation depth of the nodes
-    """
-
-    nodes = nodes.copy()
-    edges = edges.copy()
-
-    nodes, edges, graph = intialize(nodes, edges, settings)
-
-    main_path = nx.dijkstra_path(graph, settings["overflow"], settings["outfall"])
-    main_path = [int(x) for x in main_path]
-
-    edge_set = [set([edges["from"][i], edges["to"][i]]) for i in range(len(edges))]
-    nodes.loc[main_path, "considered"] = True
-    nodes = set_depth(nodes, edges, main_path, settings["min_slope"], edge_set)
-
-    i = 1
-    while not nodes["considered"].all():
-        leaf_nodes = nodes.index[nodes.connections == i].tolist()
-
-        for node in leaf_nodes:
-            if not nodes.at[node, "considered"]:
-                path = determine_path(graph, node, main_path)
-                nodes.loc[path, "considered"] = True
-
-                main_index = main_path.index(path[-1])
-                path.extend(main_path[main_index+1:])
-
-                nodes = set_depth(nodes, edges, path, settings["min_slope"], edge_set)
-        i += 1
-
-    return nodes, edges
-
-
-def flow_and_height_new(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict):
+def flow_and_height(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict):
     """Determines the direction of flow and needed installation height of the nodes based
     on the given settings (minimum slope, minimum depth and position of the outfall node)
 
@@ -109,10 +63,10 @@ def flow_and_height_new(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict)
 
     nodes = nodes.copy()
     edges = edges.copy()
-    end_point = settings["outfall"][0]
+    end_points = settings["outfalls"]
 
     nodes, edges, graph = intialize(nodes, edges, settings)
-    nodes.loc[end_point, "considered"] = True
+    nodes.loc[end_points, "considered"] = True
 
     edge_set = [set([edges["from"][i], edges["to"][i]]) for i in range(len(edges))]
     i = 1
@@ -121,7 +75,7 @@ def flow_and_height_new(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict)
 
         for node in leaf_nodes:
             if not nodes.at[node, "considered"]:
-                path = determine_path_new(graph, node, end_point)
+                path = determine_path(graph, node, end_points)
                 nodes = set_paths(nodes, path)
 
                 nodes.loc[path, "considered"] = True
@@ -152,8 +106,7 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     nodes["depth"] = settings["min_depth"]
     nodes["role"] = "node"
     nodes["path"] = None
-    nodes.at[settings["outfall"][0], "role"] = "outfall"
-    nodes.at[settings["overflow"], "role"] = "overflow"
+    nodes.loc[settings["outfalls"], "role"] = "outfall"
 
     ruined_edges = edges.copy()
     edges_melted = ruined_edges[["from", "to"]].melt(var_name='columns', value_name='index')
@@ -201,36 +154,7 @@ path: list, min_slope: float, edge_set: list[set[int]]):
 
     return nodes
 
-
-def determine_path(graph: nx.Graph, node: pd.DataFrame, main_path: list[int]):
-    """Determines the shortes path to the main path for a certain node
-    using Dijkstra's shortes path algorithm
-
-    Args:
-        graph (Graph): A NetworkX Graph of the system
-        node (DataFrame): The nodes of the system along with their attributes
-        main_path (list[int]): All the indicies of the nodes which the path passes through
-        (including start and end nodes)
-
-    Returns:
-        list[int]: The indicies of the nodes which the shortes path passes through
-    """
-
-    shortest_distance = np.inf
-    best_path = []
-
-    for option in main_path[1:]:
-        distance, path = nx.single_source_dijkstra(graph, node, target=option)
-
-        if distance < shortest_distance:
-            shortest_distance = distance
-            path = [int(x) for x in path]
-            best_path = path
-
-    return best_path
-
-
-def determine_path_new(graph: nx.Graph, start: int, end: int):
+def determine_path(graph: nx.Graph, start: int, ends: list[int]):
     """Determines the shortest path for a certain point to another point using
     Dijkstra's shortes path algorithm
 
@@ -242,10 +166,17 @@ def determine_path_new(graph: nx.Graph, start: int, end: int):
     Returns:
         list[int]: The indicies of the nodes which the shortes path passes through
     """
+    shortest_length = np.inf
+    best_path = []
 
-    path = nx.dijkstra_path(graph, start, end)
+    for end_point in ends:
+        length, path = nx.single_source_dijkstra(graph, start, target=end_point)
 
-    return [int(x) for x in path]
+        if length < shortest_length:
+            best_path = path
+            shortest_length = length
+
+    return [int(x) for x in best_path]
 
 
 def set_paths(nodes: pd.DataFrame, path: list):
@@ -408,12 +339,12 @@ def tester():
     from plotter import height_contour_plotter, diameter_map
     nodes = pd.read_csv("test_nodes_2.csv")
     edges = pd.read_csv("test_edges_2.csv")
-    settings = {"outfall":86, "overflow":1, "min_depth":1.1, "min_slope":1/500,
+    settings = {"outfalls":[86, 100, 136, 75], "min_depth":1.1, "min_slope":1/500,
                 "rainfall": 70, "perc_inp": 25}
     diam_list = [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3]
 
     nodes, _ = voronoi_area(nodes, box_extent=50)
-    nodes, edges = flow_and_height_new(nodes, edges, settings)
+    nodes, edges = flow_and_height(nodes, edges, settings)
     nodes, edges = flow_amount(nodes, edges, settings)
     edges = diameter_calc(edges, diam_list)
     nodes, edges = recleaner(nodes, edges)

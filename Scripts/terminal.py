@@ -122,14 +122,10 @@ def step_2_input():
     print("\nNow that the network has been generated, some attributes can be calculated.\n\
 Please enter the described information to enable these calculation steps:")
 
-    print("\n\nPlease enter the index of the point you want to designate as an outfall point:\n\
-(Should be a positive integer, for example: 36)\n")
-    outfall = input("Outfall point index ").split()
-    outfall = [int(x) for x in outfall]
-
-    print("\n\nNow do the same for the outfall point:\n\
-(Should be a positive integer, for example: 112)\n")
-    overflow = int(input("Overflow point index: "))
+    print("\n\nPlease enter the index of the points you want to designate as outfall points:\n\
+(Should be positive integers seperated by single spaces, for example: 36 118 2)\n")
+    outfalls = input("Outfall point index ").split()
+    outfalls = [int(x) for x in outfalls]
 
     print("\n\nEnter the minimum depth below the ground at which pipes can be installed:\n\
 (Should be a positive integer or decimal number, for example: 1.1)\n")
@@ -152,9 +148,8 @@ Please enter the described information to enable these calculation steps:")
     diam_list = input("List of available diameters: ").split()
     diam_list = [int(x) / 1000 for x in diam_list]
 
-    return {"outfall":outfall, "overflow":overflow, "min_depth":min_depth,
-            "min_slope":min_slope, "rainfall":rainfall, "perc_inp": perc_inp,
-            "diam_list": diam_list}
+    return {"outfalls":outfalls, "min_depth":min_depth, "min_slope":min_slope,
+            "rainfall":rainfall, "perc_inp": perc_inp, "diam_list": diam_list}
 
 def step_3_input():
     """Give explanation and facilitate the input space for the swmm file creation step

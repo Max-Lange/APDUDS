@@ -22,7 +22,7 @@ from swmm_formater import swmm_file_creator
 from osm_extractor import extractor, cleaner, splitter
 from plotter import network_plotter, voronoi_plotter, height_contour_plotter, diameter_map
 from terminal import greeting, step_2_input, step_3_input
-from attribute_calculator import voronoi_area, flow_and_height_new, flow_amount,\
+from attribute_calculator import voronoi_area, flow_and_height, flow_amount,\
 diameter_calc, recleaner
 from matplotlib import pyplot as plt
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -69,7 +69,7 @@ def step_2(nodes, edges, settings: dict):
         attributes
     """
 
-    nodes, edges = flow_and_height_new(nodes, edges, settings)
+    nodes, edges = flow_and_height(nodes, edges, settings)
     nodes, edges = flow_amount(nodes, edges, settings)
     edges = diameter_calc(edges, settings["diam_list"])
     nodes, edges = recleaner(nodes, edges)
@@ -82,7 +82,7 @@ def step_2(nodes, edges, settings: dict):
 
     return nodes, edges
 
-def step_3(nodes: DataFrame, edges: DataFrame, voro, settings: dict, filename: str):
+def step_3(nodes: DataFrame, edges: DataFrame, voro, settings: dict):
     """Activate the swmm file creation file step
 
     Args:
@@ -93,7 +93,7 @@ def step_3(nodes: DataFrame, edges: DataFrame, voro, settings: dict, filename: s
         filename (str): name of the SWMM file
     """
 
-    swmm_file_creator(nodes, edges, voro, settings, filename)
+    swmm_file_creator(nodes, edges, voro, settings)
 
 
 def main():
@@ -106,8 +106,8 @@ def main():
     settings = step_2_input()
     nodes, edges = step_2(nodes, edges, settings)
     print(nodes, edges)
-    filename = step_3_input()
-    step_3(nodes, edges, voro, settings, filename)
+    settings["filename"] = step_3_input()
+    step_3(nodes, edges, voro, settings)
 
 
 
@@ -120,13 +120,12 @@ def tester():
 
     nodes, edges, voro = step_1(test_coords, test_space)
 
-    settings = {"outfall":[32], "overflow":1, "min_depth":1.1, "min_slope":1/500,
-                "rainfall": 70, "perc_inp": 70, "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]}
+    settings = {"outfalls":[32], "min_depth":1.1, "min_slope":1/500,
+                "rainfall": 70, "perc_inp": 70, "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
+                "filename": "test_swmm"}
 
     nodes, edges  = step_2(nodes, edges, settings)
-
-    filename = "test_swmm"
-    step_3(nodes, edges, voro, settings, filename)
+    step_3(nodes, edges, voro, settings)
 
 
 if __name__ == "__main__":

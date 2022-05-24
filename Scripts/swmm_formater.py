@@ -4,7 +4,7 @@
 from datetime import datetime
 import pandas as pd
 
-def swmm_file_creator(nodes: pd.DataFrame, edges: pd.DataFrame, voro, settings: dict, filename:str):
+def swmm_file_creator(nodes: pd.DataFrame, edges: pd.DataFrame, voro, settings: dict):
     """Creates a .txt file which follows the System Water Management Model format, so that the
     created network can be used in that software
 
@@ -18,7 +18,7 @@ def swmm_file_creator(nodes: pd.DataFrame, edges: pd.DataFrame, voro, settings: 
 
     date = datetime.today().strftime('%m/%d/%Y')
 
-    with open(f"{filename}.txt", 'w', encoding="utf8") as file:
+    with open(f"{settings['filename']}.txt", 'w', encoding="utf8") as file:
 
         # Create title
         title = ["[TITLE]",
@@ -278,11 +278,12 @@ def tester():
     nodes = pd.read_csv("write_test_nodes_2.csv")
     edges = pd.read_csv("write_test_edges_2.csv")
 
-    settings = {"outfall":[130], "overflow":1, "min_depth":1.1, "min_slope":1/500,
-                "rainfall": 70, "perc_inp": 23, "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]}
+    settings = {"outfalls":[130], "min_depth":1.1, "min_slope":1/500,
+                "rainfall": 70, "perc_inp": 23, "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
+                "filename": "test_swmm"}
     _, voro = voronoi_area(nodes)
 
-    swmm_file_creator(nodes, edges, voro, settings, "test_swmm")
+    swmm_file_creator(nodes, edges, voro, settings)
 
 
 if __name__ == "__main__":
