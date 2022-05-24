@@ -109,7 +109,7 @@ def greeting():
 
     space = manhole_space_input()
 
-    print("\nThe pipe network and manhole distribution for the area you selected will\
+    print("\nThe pipe network and manhole distribution for the area you selected will \
 now be calculated.\n A set of figures will appear. \
 Close these figures once you are ready to proceed.")
 
@@ -124,7 +124,8 @@ Please enter the described information to enable these calculation steps:")
 
     print("\n\nPlease enter the index of the point you want to designate as an outfall point:\n\
 (Should be a positive integer, for example: 36)\n")
-    outfall = int(input("Outflow point index: "))
+    outfall = input("Outfall point index ").split()
+    outfall = [int(x) for x in outfall]
 
     print("\n\nNow do the same for the outfall point:\n\
 (Should be a positive integer, for example: 112)\n")
@@ -155,12 +156,29 @@ Please enter the described information to enable these calculation steps:")
             "min_slope":min_slope, "rainfall":rainfall, "perc_inp": perc_inp,
             "diam_list": diam_list}
 
+def step_3_input():
+    """Give explanation and facilitate the input space for the swmm file creation step
+    """
 
-def main():
+    print("\n\nIf you are satisfied with the system that has been constructed, \
+you can convert it into a System Water Management Model (SWMM) file. To do this, \
+please give a name for the file:\n")
+
+    filename = input("File name (ex: test_file): ")
+
+    print("\nThe file will now be created, and can be found in the main folder of \
+APDUDS.\nPlease note, that in order to open this file in SWMM, you will need to select\n\
+the 'all file' option in the folder explorer to be able to select the file.")
+
+    print("\nThis concludes this use case of APDUDS, the software will now close.")
+
+    return filename
+
+def tester():
     """Only used for testing purposes"""
 
-    step_2_input()
+    step_3_input()
 
 
 if __name__ == "__main__":
-    main()
+    tester()
