@@ -46,10 +46,10 @@ def swmm_file_creator(nodes: pd.DataFrame, edges: pd.DataFrame, voro, settings: 
                    "SWEEP_START          1/1",
                    "SWEEP_END            12/31",
                    "DRY_DAYS             0",
-                   "REPORT_STEP          00:15:00",
-                   "WET_STEP             00:05:00",
-                   "DRY_STEP             01:00:00",
-                   "ROUTING_STEP         0:00:20",
+                   "REPORT_STEP          00:05:00",
+                   "WET_STEP             00:01:00",
+                   "DRY_STEP             00:10:00",
+                   "ROUTING_STEP         0:00:10",
                    "RULE_STEP            00:00:00",
                    "",
                    "INERTIAL_DAMPING     PARTIAL",
@@ -92,16 +92,17 @@ Width    %Slope   CurbLen  SnowPack",
 -------- -------- -------- ----------------"]
 
         for node_index, node in nodes.iterrows():
-            nr_length = len(str(node_index))
-            catchment = f"catch{node_index}" + (17 - 5 - nr_length) * " "
-            catchment += "General" + (17 - 7) * " "
-            catchment += str(node_index) + (17 - nr_length) * " "
-            catchment += str(round(node.area * 0.0001, 4)) + \
+            if node.role == "node":
+                nr_length = len(str(node_index))
+                catchment = f"sub_{node_index}" + (17 - 4 - nr_length) * " "
+                catchment += "General" + (17 - 7) * " "
+                catchment += "j_" + str(node_index) + (17 - 2 - nr_length) * " "
+                catchment += str(round(node.area * 0.0001, 4)) + \
 (9 - len(str(round(node.area * 0.0001, 4)))) * " "
-            catchment += str(settings['perc_inp']) + (9 - len(str(settings['perc_inp']))) * " "
-            catchment += "500      0.5      0"
+                catchment += str(settings['perc_inp']) + (9 - len(str(settings['perc_inp']))) * " "
+                catchment += "500      0.5      0"
 
-            subcatchments.append(catchment)
+                subcatchments.append(catchment)
         subcatchments.append("\n")
         file.write('\n'.join(subcatchments))
 
@@ -113,11 +114,12 @@ RouteTo    PctRouted",
 ---------- ----------"]
 
         for node_index, node in nodes.iterrows():
-            nr_length = len(str(node_index))
-            subarea = f"catch{node_index}" + (17 - 5 - nr_length) * " "
-            subarea += "0.01       0.1        0.05       0.05       25         OUTLET"
+            if node.role == "node":
+                nr_length = len(str(node_index))
+                subarea = f"sub_{node_index}" + (17 - 4 - nr_length) * " "
+                subarea += "0.01       0.1        0.05       0.05       25         OUTLET"
 
-            subareas.append(subarea)
+                subareas.append(subarea)
         subareas.append("\n")
         file.write('\n'.join(subareas))
 
@@ -127,11 +129,12 @@ RouteTo    PctRouted",
                         ";;-------------- ---------- ---------- ---------- ---------- ----------",]
 
         for node_index, node in nodes.iterrows():
-            nr_length = len(str(node_index))
-            infil = f"catch{node_index}" + (17 - 5 - nr_length) * " "
-            infil += "3.0        0.5        4          7          0"
+            if node.role == "node":
+                nr_length = len(str(node_index))
+                infil = f"sub_{node_index}" + (17 - 4 - nr_length) * " "
+                infil += "3.0        0.5        4          7          0"
 
-            infiltration.append(infil)
+                infiltration.append(infil)
         infiltration.append("\n")
         file.write('\n'.join(infiltration))
 
@@ -143,7 +146,7 @@ RouteTo    PctRouted",
         for node_index, node in nodes.iterrows():
             if node.role == "node":
                 nr_length = len(str(node_index))
-                junc = str(node_index) + (17 - nr_length) * " "
+                junc = "j_" + str(node_index) + (17 - 2 - nr_length) * " "
                 junc += str(node.depth) + (11 - len(str(node.depth))) * " "
                 junc += "0          0          0          0"
 
@@ -157,13 +160,15 @@ RouteTo    PctRouted",
                     ";;-------------- ---------- ---------- ---------------- -------- \
 ----------------"]
 
-        for outfall in settings['outfall']:
-            out = str(outfall) + (17 - len(str(outfall))) * " "
-            depth = str(nodes.at[outfall, 'depth'])
-            out += depth + (11 - len(depth)) * " "
-            out += "FREE                        NO"
+        for index, node in nodes.iterrows():
+            if node.role in ["outfall", "overflow"]:
+                out = "j_" + str(index) + (17 - 2 - len(str(index))) * " "
+                depth = str(nodes.at[index, 'depth'])
+                out += depth + (11 - len(depth)) * " "
+                out += "FREE                        NO"
 
-            outfalls.append(out)
+                outfalls.append(out)
+
         outfalls.append("\n")
         file.write('\n'.join(outfalls))
 
@@ -175,9 +180,9 @@ InOffset   OutOffset  InitFlow   MaxFlow",
 ---------- ---------- ---------- ----------"]
 
         for edge_index, edge in edges.iterrows():
-            conduit = str(edge_index) + (17 - len(str(edge_index))) * " "
-            conduit += str(edge['from']) + (17 - len(str(edge['from']))) * " "
-            conduit += str(edge.to) + (17 - len(str(edge.to))) * " "
+            conduit = "c_" + str(edge_index) + (17 -2 - len(str(edge_index))) * " "
+            conduit += "j_" + str(int(edge['from'])) + (17 - 2 - len(str(int(edge['from'])))) * " "
+            conduit += "j_" + str(int(edge["to"])) + (17 - 2 - len(str(int(edge["to"])))) * " "
             conduit += str(edge.length) + (11 - len(str(edge.length))) * " "
             conduit += "0.01       0          0          0          0"
 
@@ -193,7 +198,7 @@ Geom4      Barrels    Culvert",
 ---------- ---------- ----------"]
 
         for edge_index, edge in edges.iterrows():
-            x_sec = str(edge_index) + (17 - len(str(edge_index))) * " "
+            x_sec = "c_" + str(edge_index) + (17 - 2 - len(str(edge_index))) * " "
             x_sec += "CIRCULAR     "
             x_sec += str(edge.diameter) + (17 - len(str(edge.diameter))) * " "
             x_sec += "0          0          0          1"
@@ -201,6 +206,9 @@ Geom4      Barrels    Culvert",
             xsections.append(x_sec)
         xsections.append("\n")
         file.write('\n'.join(xsections))
+
+        # Add the timeseries here
+
 
         # Create the report settings
         report = ["[REPORT]",
@@ -224,37 +232,42 @@ Geom4      Barrels    Culvert",
                         "\n"]
         file.write('\n'.join(map_settings))
 
-        # Create the junctions coordinates
+        # Create the junction coordinates
         coordinates = ["[COORDINATES]",
                        ";;Node           X-Coord            Y-Coord",
                        ";;-------------- ------------------ ------------------"]
 
         for index, node in nodes.iterrows():
-            coords = str(index) + (17 - len(str(index))) * " "
+            coords = "j_" + str(index) + (17 - 2 - len(str(index))) * " "
             coords += str(node.x) + (19 - len(str(node.x))) * " "
             coords += str(node.y) + (18 - len(str(node.y))) * " "
             coordinates.append(coords)
         coordinates.append("\n")
         file.write('\n'.join(coordinates))
 
-        # Create the subcatchments polygons
-        polygons = ["[Polygons]",
-                    ";;Subcatchment   X-Coord            Y-Coord",
-                    ";;-------------- ------------------ ------------------"]
 
-        polytopes = voro.polytopes
-        for index, node in nodes.iterrows():
-            polygon = polytopes[index]
+        if settings["polygons"] == "y":
+            # Create the subcatchments polygons
+            polygons = ["[Polygons]",
+                        ";;Subcatchment   X-Coord            Y-Coord",
+                        ";;-------------- ------------------ ------------------"]
 
-            name = "catch" + str(index) + (17 - 5 - len(str(index))) * " "
-            for point in polygon:
-                poly_point = name
-                poly_point += str(round(point[0], 2)) + (19 - len(str(round(point[0], 2)))) * " "
-                poly_point += str(round(point[1], 2)) + (18 - len(str(round(point[1], 2)))) * " "
-                polygons.append(poly_point)
+            polytopes = voro.polytopes
+            for index, node in nodes.iterrows():
+                if node.role == "node":
+                    polygon = polytopes[index]
 
-        polygons.append("\n")
-        file.write('\n'.join(polygons))
+                    name = "sub_" + str(index) + (17 - 4 - len(str(index))) * " "
+                    for point in polygon:
+                        poly_point = name
+                        poly_point += str(round(point[0], 2)) + \
+                            (19 - len(str(round(point[0], 2)))) * " "
+                        poly_point += str(round(point[1], 2)) + \
+                            (18 - len(str(round(point[1], 2)))) * " "
+                        polygons.append(poly_point)
+
+            polygons.append("\n")
+            file.write('\n'.join(polygons))
 
         # Create the map symbols
         symbols = ["[SYMBOLS]",

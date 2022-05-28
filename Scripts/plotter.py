@@ -26,11 +26,9 @@ def network_plotter(nodes: DataFrame, edges: DataFrame, subplot_number: int, num
     """
     axes = plt.subplot(subplot_number)
     plt.plot(nodes.x, nodes.y, "o")
-    # style = ["solid", "dashed", "dashdot", "dotted"]
     for _, line in edges.iterrows():
         x_coord = [nodes.at[int(line["from"]), "x"], nodes.at[int(line["to"]), "x"]]
         y_coord = [nodes.at[int(line["from"]), "y"], nodes.at[int(line["to"]), "y"]]
-        # plt.plot(x_coord, y_coord, linestyle=style[index % 4])
         plt.plot(x_coord, y_coord, "#1f77b4")
 
     if numbered:
@@ -67,7 +65,10 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
     """
 
     axes = plt.subplot(subplot_number)
-    axes.plot(nodes.x, nodes.y, 'bo')
+
+    for _, node in nodes.iterrows():
+        if node.role == "node":
+            axes.plot(node.x, node.y, "bo")
 
     for _, line in edges.iterrows():
         x_coord = [nodes.at[int(line["from"]), "x"], nodes.at[int(line["to"]), "x"]]
@@ -76,9 +77,16 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
 
     outfalls = nodes.index[nodes['role'] == "outfall"].tolist()
     for outfall in outfalls:
-        axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "ro")
+        axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv")
 
-    axes.tricontourf(nodes.x, nodes.y, nodes.depth)
+    overflows = nodes.index[nodes['role'] == "overflow"].tolist()
+    for overflow in overflows:
+        axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^")
+
+    x_coords = nodes.x[(nodes.role == "node") | (nodes.role == "outfall")]
+    y_coords = nodes.y[(nodes.role == "node") | (nodes.role == "outfall")]
+    depths = nodes.depth[(nodes.role == "node") | (nodes.role == "outfall")]
+    axes.tricontourf(x_coords, y_coords, depths)
     plt.axis("scaled")
 
 
@@ -96,13 +104,20 @@ def diameter_map(nodes: DataFrame, edges: DataFrame, subplot_number:int):
     axes = plt.subplot(subplot_number)
     scalar = edges.diameter.max()
 
+    outfalls = nodes.index[nodes['role'] == "outfall"].tolist()
+    outfalls.extend(nodes.index[nodes['role'] == "overflow"].tolist())
     for _, line in edges.iterrows():
-        x_coord = [nodes.at[int(line["from"]), "x"], nodes.at[int(line["to"]), "x"]]
-        y_coord = [nodes.at[int(line["from"]), "y"], nodes.at[int(line["to"]), "y"]]
-        plt.plot(x_coord, y_coord, "#1f77b4", linewidth=line["diameter"] * 8 / scalar)
+        if line["from"] not in outfalls and line["to"] not in outfalls:
+            x_coord = [nodes.at[int(line["from"]), "x"], nodes.at[int(line["to"]), "x"]]
+            y_coord = [nodes.at[int(line["from"]), "y"], nodes.at[int(line["to"]), "y"]]
+            plt.plot(x_coord, y_coord, "#1f77b4", linewidth=line["diameter"] * 8 / scalar)
 
     outfalls = nodes.index[nodes['role'] == "outfall"].tolist()
     for outfall in outfalls:
-        axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "ro")
+        axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv")
+
+    overflows = nodes.index[nodes['role'] == "overflow"].tolist()
+    for overflow in overflows:
+        axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^")
 
     plt.axis("scaled")

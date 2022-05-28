@@ -77,9 +77,9 @@ def flow_and_height(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict):
             if not nodes.at[node, "considered"]:
                 path = determine_path(graph, node, end_points)
                 nodes = set_paths(nodes, path)
+                nodes = set_depth(nodes, edges, path, settings["min_slope"], edge_set)
 
                 nodes.loc[path, "considered"] = True
-                nodes = set_depth(nodes, edges, path, settings["min_slope"], edge_set)
         i += 1
 
     if "max_slope" in settings:
@@ -109,7 +109,6 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     nodes["depth"] = settings["min_depth"]
     nodes["role"] = "node"
     nodes["path"] = None
-    nodes.loc[settings["outfalls"], "role"] = "outfall"
 
     ruined_edges = edges.copy()
     edges_melted = ruined_edges[["from", "to"]].melt(var_name='columns', value_name='index')
@@ -326,7 +325,7 @@ def diameter_calc(edges: pd.DataFrame, diam_list: list[float]):
     return edges
 
 
-def recleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
+def cleaner_and_trimmer(nodes: pd.DataFrame, edges: pd.DataFrame):
     """Round of calculated values to realistic decimal precisions, and drop columns
     which were added for intermediate calculations
 
@@ -339,7 +338,10 @@ def recleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
     """
 
     nodes = nodes.drop(columns=["considered", "path", "connections"])
-    nodes.role[nodes.role == "overflow"] = "node"
+
+    if "Unnamed: 0" in nodes.keys():
+        nodes = nodes.drop(columns=["Unnamed: 0"])
+        edges = edges.drop(columns=["Unnamed: 0"])
 
     # cm precision for x, y and depth
     # m^2 precision for area
@@ -355,6 +357,45 @@ def recleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
     edges.length = edges.length.round(decimals=2)
     edges.flow = edges.flow.round(decimals=3)
 
+    # Drop the conduits with 0 flow
+    edges = edges[edges.flow != 0]
+    edges = edges.reset_index(drop=True)
+
+    return nodes, edges
+
+
+def add_outfalls(nodes, edges, settings):
+
+    for outfall in settings["outfalls"]:
+        new_index = len(nodes)
+        nodes.loc[new_index] = [nodes.at[outfall, "x"] + 1,
+                                nodes.at[outfall, "y"] + 1,
+                                0,
+                                nodes.depth.max(),
+                                "outfall",
+                                0]
+
+        edges.loc[len(edges)] = [outfall,
+                                 new_index,
+                                 1,
+                                 0,
+                                 settings["diam_list"][-1]]
+
+    for overflow in settings["overflows"]:
+        new_index = len(nodes)
+        nodes.loc[new_index] = [nodes.at[overflow, "x"] + 1,
+                                nodes.at[overflow, "y"] + 1,
+                                0,
+                                settings["min_depth"],
+                                "overflow",
+                                0]
+
+        edges.loc[len(edges)] = [new_index,
+                                 overflow,
+                                 1,
+                                 0,
+                                 settings["diam_list"][-1]]
+
     return nodes, edges
 
 
@@ -365,15 +406,16 @@ def tester():
     from plotter import height_contour_plotter, diameter_map
     nodes = pd.read_csv("test_nodes_2.csv")
     edges = pd.read_csv("test_edges_2.csv")
-    settings = {"outfalls":[86, 100, 136, 75], "min_depth":1.1, "min_slope":1/500,
-                "rainfall": 70, "perc_inp": 25}
-    diam_list = [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3]
+    settings = {"outfalls":[86], "overflows":[1, 2, 3], "min_depth":1.1, "min_slope":1/500,
+                "rainfall": 70, "perc_inp": 25, "max_slope": 1/400,
+                "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3]}
 
     nodes, _ = voronoi_area(nodes, box_extent=50)
     nodes, edges = flow_and_height(nodes, edges, settings)
     nodes, edges = flow_amount(nodes, edges, settings)
-    edges = diameter_calc(edges, diam_list)
-    nodes, edges = recleaner(nodes, edges)
+    edges = diameter_calc(edges, settings["diam_list"])
+    nodes, edges = cleaner_and_trimmer(nodes, edges)
+    nodes, edges = add_outfalls(nodes, edges, settings)
 
 
     print(nodes, edges)
@@ -384,9 +426,6 @@ def tester():
 
 
     plt.show()
-
-
-
 
 
 if __name__ == "__main__":

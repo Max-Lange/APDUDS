@@ -91,7 +91,7 @@ def manhole_space_input() -> int:
     return space
 
 
-def greeting():
+def step_1_input():
     """Present the user with a greeting, followed by a space for the user to enter the
     coordinates of the wanted bounding box, and maximum manhole spacing
     """
@@ -105,11 +105,11 @@ def greeting():
     coords = coords_input()
 
     print("\nFor creating intermediate manholes, the maximum allowable space between\
- these manholes is needed.\nPlease specify this distance (in meters) (example: 20)\n")
+ these manholes is needed.\nPlease specify this distance (in meters) (example: 100)\n")
 
     space = manhole_space_input()
 
-    print("\nThe pipe network and manhole distribution for the area you selected will \
+    print("\nThe conduit network and manhole distribution for the area you selected will \
 now be calculated.\n A set of figures will appear. \
 Close these figures once you are ready to proceed.")
 
@@ -118,60 +118,89 @@ Close these figures once you are ready to proceed.")
 def step_2_input():
     """Present the user with the input space for the burring depth parameters
     """
+    settings = {}
 
     print("\nNow that the network has been generated, some attributes can be calculated.\n\
-Please enter the described information to enable these calculation steps:")
+Please enter the described information to enable the next set of calculation steps:")
 
-    print("\n\nPlease enter the index of the points you want to designate as outfall points:\n\
-(Should be positive integers seperated by single spaces, for example: 36 118 2)\n")
-    outfalls = input("Outfall point index ").split()
-    outfalls = [int(x) for x in outfalls]
+    print("\nThe index of the point you want to designate as an outfall point:\n\
+(Should be a positive integer, for example: 78)\n")
+    outfalls = input("Outfall point index: ").split()
+    settings["outfalls"] = [int(x) for x in outfalls]
 
-    print("\n\nEnter the minimum depth below the ground at which pipes can be installed:\n\
+    print("\n\nThe indicies of the points which you want to designate as overflow points:\n\
+(Positive integers seperate by space, for examle: 23 65 118)\n")
+    overflows = input("Overflows points indicies: ").split()
+    settings["overflows"] = [int(x) for x in overflows]
+
+    print("\n\nThe minimum depth below the ground at which conduits can be installed:\n\
 (Should be a positive integer or decimal number, for example: 1.1)\n")
-    min_depth = float(input("Minimum installation depth [m]: "))
+    settings["min_depth"] = float(input("Minimum installation depth [m]: "))
 
-    print("\n\nEnter the minimum slope for the pipes:\n\
-(Should be a decimal number between (but not including!) 0 and 1, for example: 0.002)\n")
-    min_slope = float(input("Minimum slope [-]: "))
+    print("\n\nEnter the required minimum slope for the conduits:\n\
+(Should be a postive decimal number, for example: 0.002)\n")
+    settings["min_slope"] = float(input("Minimum slope [m/m]: "))
+
+    print("\n\nDo you want to enter a maxmimum allowable slope as well:")
+    choice = yes_no_choice()
+
+    if choice == "y":
+        print("\n\nMaximum slope should always be larger than the minimum slope\n")
+        settings["max_slope"] = float(input("Maximum slope [m/m]: "))
 
     print("\n\nEnter the design storm rainfall:\n\
 (Should be a positive integer, for example: 70)\n")
-    rainfall = int(input("The design storm rainfall [L/s/ha]: "))
+    settings["rainfall"] = int(input("The design storm rainfall [L/s/ha]: "))
 
     print("\n\nThe average percentage of inpervious ground coverage of the area:\n\
 (Should be a positive integer number between 0 and 100, for example: 25)\n")
-    perc_inp = int(input("Percentage of impervious ground [%]: "))
+    settings["perc_inp"] = int(input("Percentage of impervious ground [%]: "))
 
     print("\n\nA list of the available diameters of the conduits:\n\
 (Should be a series of number seperated by spaces, for example: 150 300 500 1000)\n")
-    diam_list = input("List of available diameters: ").split()
-    diam_list = [int(x) / 1000 for x in diam_list]
+    diam_list = input("List of available diameters [mm]: ").split()
+    settings["diam_list"] = [int(x) / 1000 for x in diam_list]
 
-    return {"outfalls":outfalls, "min_depth":min_depth, "min_slope":min_slope,
-            "rainfall":rainfall, "perc_inp": perc_inp, "diam_list": diam_list}
+    return settings
 
 def step_3_input():
     """Give explanation and facilitate the input space for the swmm file creation step
     """
 
-    print("\n\nIf you are satisfied with the system that has been constructed, \
-you can convert it into a System Water Management Model (SWMM) file. To do this, \
-please give a name for the file:\n")
+    settings = {}
 
-    filename = input("File name (ex: test_file): ")
+    print("\n\nIf you are satisfied with the system that has been constructed,\n\
+you can convert it into a System Water Management Model (SWMM) file. To do this,\n\
+please give some final specifications:\n")
+
+    print("\nA timeseries will be created from your given design storm value.\n\
+Please specify the duration of this design storm in whole hours (for example: 2)\n")
+    settings["duration"] = int(input("Design storm duration [hours]: "))
+
+
+    print("\n\nA name for the SWMM file. This file will be a .txt file.\n\
+The filename cannot contain any spaces or quotes (for example: test_file)\n")
+    settings["filename"] = input("File name: ")
+
+    print("\n\nLastly, it is possible to show the subcatchment polygons in SWMM.\n\
+Doing this for larger networks however may make the network difficult to view.\n\
+Do you want to include the subcatchment polygons?\n")
+    settings["polygons"] = yes_no_choice()
 
     print("\nThe file will now be created, and can be found in the main folder of \
 APDUDS.\nPlease note, that in order to open this file in SWMM, you will need to select\n\
-the 'all file' option in the folder explorer to be able to select the file.")
+the 'all files' option in the folder explorer to be able to see the file in the directory.")
 
-    print("\nThis concludes this use case of APDUDS, the software will now close.")
+    print("\nThis concludes this use session of APDUDS, the software will now close.")
 
-    return filename
+    return settings
+
 
 def tester():
     """Only used for testing purposes"""
 
+    step_1_input()
+    step_2_input()
     step_3_input()
 
 

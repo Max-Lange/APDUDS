@@ -16,14 +16,13 @@ This file contains the following modules:
 """
 
 import warnings
-
 from pandas import DataFrame
 from swmm_formater import swmm_file_creator
 from osm_extractor import extractor, cleaner, splitter
 from plotter import network_plotter, voronoi_plotter, height_contour_plotter, diameter_map
-from terminal import greeting, step_2_input, step_3_input
+from terminal import step_1_input, step_2_input, step_3_input
 from attribute_calculator import voronoi_area, flow_and_height, flow_amount,\
-diameter_calc, recleaner
+diameter_calc, cleaner_and_trimmer, add_outfalls
 from matplotlib import pyplot as plt
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -40,19 +39,13 @@ def step_1(coords: list[float], space: int):
     nodes, edges = extractor(coords)
     filtered_nodes, filtered_edges = cleaner(nodes, edges)
     split_nodes, split_edges = splitter(filtered_nodes, filtered_edges, space)
-    area_nodes, voro = voronoi_area(split_nodes)
 
     _ = plt.figure()
-    # Create a plot for the downloaded road network
-    network_plotter(filtered_nodes, filtered_edges, 221)
     # Create a plot for the split road network
-    network_plotter(split_nodes, split_edges, 222, numbered=True)
-    # Create a plot of the vornoi catchement areas
-    voronoi_plotter(area_nodes, voro, 223)
+    network_plotter(split_nodes, split_edges, 111, numbered=True)
+    plt.show(block=True)
 
-    plt.show()
-
-    return area_nodes, split_edges, voro
+    return split_nodes, split_edges
 
 
 def step_2(nodes, edges, settings: dict):
@@ -69,18 +62,21 @@ def step_2(nodes, edges, settings: dict):
         attributes
     """
 
+    nodes, voro = voronoi_area(nodes)
     nodes, edges = flow_and_height(nodes, edges, settings)
     nodes, edges = flow_amount(nodes, edges, settings)
     edges = diameter_calc(edges, settings["diam_list"])
-    nodes, edges = recleaner(nodes, edges)
+    nodes, edges = cleaner_and_trimmer(nodes, edges)
+    nodes, edges = add_outfalls(nodes, edges, settings)
 
     _ = plt.figure()
-    height_contour_plotter(nodes, edges, 121)
-    diameter_map(nodes, edges, 122)
+    voronoi_plotter(nodes, voro, 221)
+    height_contour_plotter(nodes, edges, 222)
+    diameter_map(nodes, edges, 223)
 
-    plt.show()
+    plt.show(block=True)
 
-    return nodes, edges
+    return nodes, edges, voro
 
 def step_3(nodes: DataFrame, edges: DataFrame, voro, settings: dict):
     """Activate the swmm file creation file step
@@ -100,13 +96,13 @@ def main():
     """Running this function starts the software in its entirety
     """
 
-    coords, space = greeting()
-    nodes, edges, voro = step_1(coords, space)
-    print(nodes, edges)
+    coords, space = step_1_input()
+    nodes, edges = step_1(coords, space)
+
     settings = step_2_input()
-    nodes, edges = step_2(nodes, edges, settings)
-    print(nodes, edges)
-    settings["filename"] = step_3_input()
+    nodes, edges, voro = step_2(nodes, edges, settings)
+
+    settings.update(step_3_input())
     step_3(nodes, edges, voro, settings)
 
 
@@ -115,17 +111,25 @@ def tester():
     """Only used for testing
     """
 
-    test_coords = [52.0106, 52.0033, 4.9892, 4.9719]
-    test_space = 100
+    test_coords = [51.9293, 51.9200, 4.8401, 4.8166]
+    test_space = 120
 
-    nodes, edges, voro = step_1(test_coords, test_space)
+    nodes, edges = step_1(test_coords, test_space)
 
-    settings = {"outfalls":[32], "min_depth":1.1, "min_slope":1/500,
-                "rainfall": 70, "perc_inp": 70, "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
-                "filename": "test_swmm"}
+    test_settings = {"outfalls":[32],
+                     "overflows":[1, 2, 3],
+                     "min_depth":1.1,
+                     "min_slope":1/500,
+                     "rainfall": 70,
+                     "perc_inp": 30,
+                     "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
+                     "filename": "test_swmm",
+                     "max_slope":1/350,
+                     "duration": 2,
+                     "polygons": "n"}
 
-    nodes, edges  = step_2(nodes, edges, settings)
-    step_3(nodes, edges, voro, settings)
+    nodes, edges, voro  = step_2(nodes, edges, test_settings)
+    step_3(nodes, edges, voro, test_settings)
 
 
 if __name__ == "__main__":
