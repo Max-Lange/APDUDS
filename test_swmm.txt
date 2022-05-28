@@ -48,7 +48,7 @@ DRY_ONLY         NO
 [RAINGAGES]
 ;;Name           Format    Interval SCF      Source 
 ;;-------------- --------- ------ ------ ----------
-General          INTENSITY 1:00     1.0      TIMESERIES
+General          INTENSITY 0:05     1.0      TIMESERIES Design_Storm
 
 [SUBCATCHMENTS]
 ;;Name           Rain Gage        Outlet           Area     %Imperv  Width    %Slope   CurbLen  SnowPack
@@ -1005,6 +1005,34 @@ c_152            CIRCULAR     3.0              0          0          0          
 c_153            CIRCULAR     3.0              0          0          0          1
 c_154            CIRCULAR     3.0              0          0          0          1
 c_155            CIRCULAR     3.0              0          0          0          1
+
+[TIMESERIES]
+;;Name           Date       Time       Value
+;;-------------- ---------- ---------- ----------
+Design_Storm     05/28/2022 0:00       70
+Design_Storm     05/28/2022 0:05       70
+Design_Storm     05/28/2022 0:10       70
+Design_Storm     05/28/2022 0:15       70
+Design_Storm     05/28/2022 0:20       70
+Design_Storm     05/28/2022 0:25       70
+Design_Storm     05/28/2022 0:30       70
+Design_Storm     05/28/2022 0:35       70
+Design_Storm     05/28/2022 0:40       70
+Design_Storm     05/28/2022 0:45       70
+Design_Storm     05/28/2022 0:50       70
+Design_Storm     05/28/2022 0:55       70
+Design_Storm     05/28/2022 1:00       70
+Design_Storm     05/28/2022 1:05       70
+Design_Storm     05/28/2022 1:10       70
+Design_Storm     05/28/2022 1:15       70
+Design_Storm     05/28/2022 1:20       70
+Design_Storm     05/28/2022 1:25       70
+Design_Storm     05/28/2022 1:30       70
+Design_Storm     05/28/2022 1:35       70
+Design_Storm     05/28/2022 1:40       70
+Design_Storm     05/28/2022 1:45       70
+Design_Storm     05/28/2022 1:50       70
+Design_Storm     05/28/2022 1:55       70
 
 [REPORT]
 ;;Reporting Options
