@@ -19,7 +19,7 @@ from freud.box import Box
 from freud.locality import Voronoi
 import numpy as np
 
-def voronoi_area(nodes: pd.DataFrame, box_extent: int=10):
+def voronoi_area(nodes: pd.DataFrame, box_extent: int=0):
     """_summary_
 
     Args:
@@ -217,7 +217,8 @@ def uphold_max_slope(nodes, edges, edge_set, max_slope):
             higher_node = path[-2-i]
             length = edges.at[edge_set.index(set([lower_node, higher_node])), "length"]
 
-            if nodes.at[lower_node, "depth"] - nodes.at[higher_node, "depth"] / length > max_slope:
+            if abs(nodes.at[lower_node, "depth"] - nodes.at[higher_node, "depth"])\
+                 / length > max_slope:
                 nodes.at[higher_node, "depth"] = nodes.at[lower_node, "depth"] - length * max_slope
 
     return nodes

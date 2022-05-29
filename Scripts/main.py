@@ -25,6 +25,7 @@ from attribute_calculator import voronoi_area, flow_and_height, flow_amount,\
 diameter_calc, cleaner_and_trimmer, add_outfalls
 from matplotlib import pyplot as plt
 warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=UserWarning)
 
 
 def step_1(coords: list[float], space: int):
@@ -69,11 +70,12 @@ def step_2(nodes, edges, settings: dict):
     nodes, edges = cleaner_and_trimmer(nodes, edges)
     nodes, edges = add_outfalls(nodes, edges, settings)
 
-    _ = plt.figure()
+    fig = plt.figure()
     voronoi_plotter(nodes, voro, 221)
-    height_contour_plotter(nodes, edges, 222)
+    height_contour_plotter(nodes, edges, 222, fig)
     diameter_map(nodes, edges, 223)
 
+    fig.tight_layout()
     plt.show(block=True)
 
     return nodes, edges, voro
@@ -116,15 +118,15 @@ def tester():
 
     nodes, edges = step_1(test_coords, test_space)
 
-    test_settings = {"outfalls":[32],
-                     "overflows":[1, 2, 3],
+    test_settings = {"outfalls":[111],
+                     "overflows":[32, 136, 140],
                      "min_depth":1.1,
                      "min_slope":1/500,
                      "rainfall": 70,
-                     "perc_inp": 30,
+                     "perc_inp": 50,
                      "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
                      "filename": "test_swmm",
-                     "max_slope":1/350,
+                     "max_slope": 1/350,
                      "duration": 2,
                      "polygons": "n"}
 

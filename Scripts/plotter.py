@@ -35,6 +35,9 @@ def network_plotter(nodes: DataFrame, edges: DataFrame, subplot_number: int, num
         for index, node in nodes.iterrows():
             axes.annotate(str(index), xy=(node.x, node.y), color="k")
 
+    axes.set_title("Initial Pipe Network")
+    axes.set_xlabel("Longitudinal Size")
+    axes.set_ylabel("Latitudinal Size")
     plt.axis('scaled')
 
 
@@ -50,11 +53,14 @@ def voronoi_plotter(nodes: DataFrame, voro, subplot_number: int):
     points = np.array([[nodes.x[i], nodes.y[i], 0] for i in range(len(nodes))])
 
     axes = plt.subplot(subplot_number)
-    voro.plot(ax=axes)
+    voro.plot(ax=axes, color_by_sides=False)
     axes.scatter(points[:, 0], points[:, 1])
 
+    axes.set_title("Subcatchment Area for each Node")
+    plt.axis("scaled")
 
-def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:int):
+
+def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:int, fig):
     """Creates a subplot of a contourmap of the depth of the nodes, with the conduit
     network laid overtop.
 
@@ -77,16 +83,32 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
 
     outfalls = nodes.index[nodes['role'] == "outfall"].tolist()
     for outfall in outfalls:
-        axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv")
+        if outfall == outfalls[0]:
+            axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv", label="Outfall")
+
+        else:
+            axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv")
 
     overflows = nodes.index[nodes['role'] == "overflow"].tolist()
     for overflow in overflows:
-        axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^")
+        if overflow == overflows[0]:
+            axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^", label="Overflow")
+
+        else:
+            axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^")
 
     x_coords = nodes.x[(nodes.role == "node") | (nodes.role == "outfall")]
     y_coords = nodes.y[(nodes.role == "node") | (nodes.role == "outfall")]
     depths = nodes.depth[(nodes.role == "node") | (nodes.role == "outfall")]
-    axes.tricontourf(x_coords, y_coords, depths)
+    contourf = axes.tricontourf(x_coords, y_coords, depths)
+
+    axes.scatter([nodes.x.min()-50, nodes.x.max()+50],
+                 [nodes.y.min()-50, nodes.y.max()+50],
+                 color="white")
+    cbar = fig.colorbar(contourf, ax=axes)
+    cbar.set_label("Depth below ground [m]")
+    axes.set_title("Contour Map of the Needed Node Depth")
+    axes.legend()
     plt.axis("scaled")
 
 
@@ -114,10 +136,21 @@ def diameter_map(nodes: DataFrame, edges: DataFrame, subplot_number:int):
 
     outfalls = nodes.index[nodes['role'] == "outfall"].tolist()
     for outfall in outfalls:
-        axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv")
+        if outfall == outfalls[0]:
+            axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv", label="Outfall")
+
+        else:
+            axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv")
 
     overflows = nodes.index[nodes['role'] == "overflow"].tolist()
     for overflow in overflows:
-        axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^")
+        if overflow == overflows[0]:
+            axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^", label="Overflow")
 
+        else:
+            axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^")
+
+
+    axes.set_title("Relative Diameters of the Conduits")
+    axes.legend()
     plt.axis("scaled")
