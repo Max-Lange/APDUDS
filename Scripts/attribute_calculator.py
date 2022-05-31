@@ -1,16 +1,16 @@
-"""Defining file for all the attribute calculation functions
+"""Defining file for all the attribute calculation functions of step 2 of APDUDS
 
-This script defines the functions that calculate certain attributes of the network,
-such as the catchment area, as well as the elevation
-
-This script requires that `freud, numpy and pandas` be installed within the Python
+This script requires that `networkx`, `pandas`, `freud` and `numpy` be installed within the Python
 environment you are running this script in.
 
-This file can also be imported as a module and contains the following
-functions:s
+This file contains the following major functions:
 
     * voronoi_area - Calculates the catchment area for each node using voronoi
-    * main - Only used for testing purposes
+    * flow_and_height - Determinte the flow direction and set the node depth
+    * flow_amount - Determine the amount of water flow through each conduit
+    * diameter_calc - Determine the appropriate diameter for eac conduit
+    * cleaner_and_trimmer - Remove intermediate information and precision from the data
+    * tester - Only used for testing purposes
 """
 
 import networkx as nx
@@ -19,24 +19,20 @@ from freud.box import Box
 from freud.locality import Voronoi
 import numpy as np
 
-def voronoi_area(nodes: pd.DataFrame, box_extent: int=0):
-    """_summary_
+def voronoi_area(nodes: pd.DataFrame):
+    """Calculates the catchment area for the nodes using voronoi
 
     Args:
-        nodes (pd.DataFrame): x and y positions of all the nodes
-        box_extent (int, optional): area to extend the bounding box by. Defaults to 10.
+        nodes (pd.DataFrame): The node data of a network
 
     Returns:
-        tuple([pd.DataFrame, Freud.locality.Voronoi]): nodes with a catchment area column added,
-        and completed vornoir calculation (for plotting purposes)
+        tuple([pd.DataFrame, Freud.locality.Voronoi]): Node data with added subcatchment area
+        values, and freud voronoi object
     """
 
     nodes = nodes.copy()
 
-    box_length_x = nodes.x.max() * 2 + box_extent * 2
-    box_length_y = nodes.y.max() * 2 + box_extent * 2
-
-    box = Box(Lx=box_length_x, Ly=box_length_y, is2D=True)
+    box = Box(Lx=nodes.x.max() * 2, Ly=nodes.y.max() * 2, is2D=True)
     points = np.array([[nodes.x[i], nodes.y[i], 0] for i in range(len(nodes))])
 
     voro = Voronoi()
@@ -46,19 +42,18 @@ def voronoi_area(nodes: pd.DataFrame, box_extent: int=0):
 
     return nodes, voro
 
-def flow_and_height(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict):
-    """Determines the direction of flow and needed installation height of the nodes based
-    on the given settings (minimum slope, minimum depth and position of the outfall node)
+def flow_and_depth(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict):
+    """Determines the direction of flow of the water (using Dijkstra's algorithm) and
+    needed installation depth of the nodes based on the given settings.
 
     Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        edges (DataFrame): The conduits of the system along with their attributes
-        settings (dict): Values for the minimum slope, the minimum depth, and locations
-        of the outfall and overflow points
+        nodes (DataFrame): The node data of a network
+        edges (DataFrame): The conduit data of a network
+        settings (dict): Parameters for the network
 
     Returns:
-        tuple[DataFrame, DataFrame]: The nodes and conduits dataframes with the newly determined
-        flow direction and needed installation depth of the nodes
+        tuple[DataFrame, DataFrame]: Node data with added depth and path values,
+        and conduit data with "from" and "to" columns corrected
     """
 
     nodes = nodes.copy()
@@ -67,10 +62,13 @@ def flow_and_height(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict):
     nodes, edges, graph = intialize(nodes, edges, settings)
     end_points = settings["outfalls"]
     nodes.loc[end_points, "considered"] = True
+    # Create a set of all the "to" "from" combos of the conduits for later calculations
     edge_set = [set([edges["from"][i], edges["to"][i]]) for i in range(len(edges))]
 
     i = 1
     while not nodes["considered"].all():
+        # Using the number of connections to sort them will make leaf nodes be considered first,
+        # which has a larger change to include more nodes in one dijkstra run
         leaf_nodes = nodes.index[nodes.connections == i].tolist()
 
         for node in leaf_nodes:
@@ -90,19 +88,17 @@ def flow_and_height(nodes: pd.DataFrame, edges: pd.DataFrame, settings:dict):
 
 
 def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
-    """_summary_
+    """Add the needed columns to the node and edge datasets to facilitate the operations
+    of later functions. Also creates a networkx graph for the dijkstra calculations
 
     Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        edges (DataFrame): The conduits of the system along with their attributes
-        settings (dict): values for the minimum depth and the positions of the
-        outfall and overflow points
+        nodes (DataFrame): The node data of a network
+        edges (DataFrame): The conduit data of a network
+        settings (dict): Parameters for the network
 
     Returns:
-        tuple[DataFrame, DataFrame, Graph]: The nodes and edges dataframes with
-        new columns which are needed (or will be filled in) in the later functions
-        of the flow direction and depth calculation process. Also a NetworkX Graph
-        for calculating the shortest paths using networkx' dijkstra function
+        tuple[DataFrame, DataFrame, Graph]: The node and edge datasets with the needed columns
+        added, and a networkx graph of the network
     """
 
     nodes["considered"] = False
@@ -110,6 +106,7 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     nodes["role"] = "node"
     nodes["path"] = None
 
+    # Some more complex pandas operations are needed to get the connection numbers in a few lines
     ruined_edges = edges.copy()
     edges_melted = ruined_edges[["from", "to"]].melt(var_name='columns', value_name='index')
     edges_melted["index"] = edges_melted["index"].astype(int)
@@ -125,17 +122,18 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
 
 
 def determine_path(graph: nx.Graph, start: int, ends: list[int]):
-    """Determines the shortest path for a certain point to another point using
-    Dijkstra's shortes path algorithm
+    """Determines the shortest path from a certain point to another point on a networkx graph
+    using Dijkstra's shortes path algorithm
 
     Args:
-        graph (Graph): A NetworkX Graph object of the system
+        graph (Graph): A NetworkX Graph object of the network
         start (int): The index of the starting node
         end (int): The index of the end node
 
     Returns:
         list[int]: The indicies of the nodes which the shortes path passes through
     """
+
     shortest_length = np.inf
     best_path = []
 
@@ -146,18 +144,19 @@ def determine_path(graph: nx.Graph, start: int, ends: list[int]):
             best_path = path
             shortest_length = length
 
+    # Generator expression is needed to remove the .0 that is added by networkx' dijkstra
     return [int(x) for x in best_path]
 
 
 def set_paths(nodes: pd.DataFrame, path: list):
-    """Determines the path to the end node for all the nodes along a given path
+    """Determine the path to the outfall for each node, and add this to the node data
 
     Args:
-        nodes (DataFrame): _description_
-        path (list[int]): The indicies of the nodes which the path passes through
+        nodes (DataFrame): The node data for a network
+        path (list[int]): The indicies of the nodes which a path passes through
 
     Returns:
-        DataFrame: Nodes data with the updated path for the relevant nodes
+        DataFrame: Node data with the relevant path values updated
     """
 
     for i, node in enumerate(path):
@@ -169,20 +168,17 @@ def set_paths(nodes: pd.DataFrame, path: list):
 
 
 def set_depth(nodes: pd.DataFrame, edges: pd.DataFrame,
-path: list, min_slope: float, edge_set: list[set[int]]):
+              path: list, min_slope: float, edge_set: list[set[int]]):
     """Set the depth of the nodes along a certain route using the given minimum slope.
-    It calculates the distance between the nodes using conduit lenghts, and lowers the end
-    point such that it satisfies the minimum slope.
 
     Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        edges (DataFrame): The conduits of the system along with their attributes
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
         path (list): All the indicies of the nodes which the path passes through
-        (including start and end nodes)
-        min_slope (float): The value (1/distance [m]) for the minimum slope
+        min_slope (float): The value for the minimum slope [m/m]
 
     Returns:
-        DataFrame: The nodes dataframe with updated depths for the nodes along the given path
+        DataFrame: The node data with the relevant depth values updated
     """
 
     for i in range(len(path) - 1):
@@ -190,33 +186,43 @@ path: list, min_slope: float, edge_set: list[set[int]]):
         to_node = path[i+1]
 
         from_depth = nodes.at[from_node, "depth"]
+        # Use the edge set to get the conduit index
         length = edges.at[edge_set.index(set([from_node, to_node])), "length"]
         new_to_depth = from_depth + min_slope * length
 
+        # Only update the depth if the new depth is deeper than the current depth
         if new_to_depth > nodes.at[to_node, "depth"]:
             nodes.at[to_node, "depth"] = new_to_depth
 
     return nodes
 
-def uphold_max_slope(nodes, edges, edge_set, max_slope):
-    """_summary_
+def uphold_max_slope(nodes: pd.DataFrame, edges: pd.DataFrame,\
+                     edge_set: list[set[int]], max_slope: float):
+    """Checks if the conduits uphold the max slope rule, and alters/lowers the relevant nodes
+    when this isn't the case
 
     Args:
-        nodes (_type_): _description_
-        max_slope (_type_): _description_
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
+        edge_set (list[set[int]]): A list of sets of all the "from" "to" node combos
+        of the conduits
+        max_slope (float): The value of the maximum slope [m/m]
 
     Returns:
-        _type_: _description_
+        DataFrame: The node data with the depth value updated were needed
     """
 
     for _, node in nodes.iterrows():
         path = node.path
 
         for i in range(len(path)-1):
+            # Move backwards through the list as the depth can only become greater
             lower_node = path[-1-i]
             higher_node = path[-2-i]
+            # Use the edge set to get the conduit index
             length = edges.at[edge_set.index(set([lower_node, higher_node])), "length"]
 
+            # Only update the depth if the current slope is greater than the max slope
             if abs(nodes.at[lower_node, "depth"] - nodes.at[higher_node, "depth"])\
                  / length > max_slope:
                 nodes.at[higher_node, "depth"] = nodes.at[lower_node, "depth"] - length * max_slope
@@ -225,14 +231,14 @@ def uphold_max_slope(nodes, edges, edge_set, max_slope):
 
 
 def reset_direction(nodes: pd.DataFrame, edges: pd.DataFrame):
-    """Flips the "from" and "to" columns for all conduits where necessary.
+    """Flips the "from" and "to" columns for all conduits where needed if depth is reversed
 
     Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        edges (DataFrame): The conduits of the system along with their attributes
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
 
     Returns:
-        DataFrame: Edges data with the "from" "to" order corrected according to the depth
+        DataFrame: Conduit data with the "from" "to" order flipped were needed
     """
 
     for i, edge in edges.iterrows():
@@ -243,103 +249,83 @@ def reset_direction(nodes: pd.DataFrame, edges: pd.DataFrame):
 
 
 def flow_amount(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
-    """Calculates the amount of flow throught the conduits based on the given design storm
-    rainfall and the percentage of hardend ground surface.
+    """Calculate the amount of flow through each conduit
 
     Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        edges (DataFrame): The conduits of the system along with their attributes
-        settings (dict): Values for the design storm rainfall and the percentage of hardend
-        ground surface
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
+        settings (dict): Network parameters
 
     Returns:
-        tuple[DataFrame, DataFrame]: nodes and conduits data with added inflow and flow rates
-        for the nodes and conduits respectively
+        tuple[DataFrame, DataFrame]: Node and conduit data with the inflow and flow
+        values added
     """
 
     nodes = nodes.copy()
     edges = edges.copy()
 
-    nodes["inflow"] = inflow(nodes, settings)
+    nodes["inflow"] = nodes["area"] * (settings["peak_rain"] / (10**7))\
+         * (settings["perc_inp"] / 100)
     edges["flow"] = 0
     edge_set = [set([edges["from"][i], edges["to"][i]]) for i in range(len(edges))]
 
     for _, node in nodes.iterrows():
         path = node["path"]
 
-        # Can this not be simplified to a generator expression and a .loc?
         for j in range(len(path)-1):
             edge = set([path[j], path[j+1]])
-
             edges.at[edge_set.index(edge), "flow"] += node["inflow"]
 
     return nodes, edges
 
 
-def inflow(nodes: pd.DataFrame, settings: dict):
-    """Calculates the inflow amount for all nodes
-
-    Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        settings (dict): Values for the design storm rainfall and the percentage of hardend
-        ground surface
-
-    Returns:
-        DataFrame: nodes data with added inflow rates
-    """
-
-    return nodes["area"] * (settings["rainfall"] / (10**7)) * (settings["perc_inp"] / 100)
-
-
 def diameter_calc(edges: pd.DataFrame, diam_list: list[float]):
-    """Calculates the closest needed diameter (rounded up) for the given flow rate
-    out of the given diameter list
+    """Determine the needed diameter for the conduits from a given list of diameters using the
+    calculate flow amount
 
     Args:
-        edges (DataFrame): The conduits of the system along with their attributes
+        edges (DataFrame): The conduit data for a network
         diam_list (list[float]): List of the different usable diameter sizes for the
-        conduits (in meters)
+        conduits [m]
 
     Returns:
-        DataFrame: Edges data with added diameters
+        DataFrame: Conduit data with diameter values added
     """
 
     edges["diameter"] = None
 
     for i, flow in enumerate(edges["flow"]):
-        if flow == 0:
-            edges.at[i, "diameter"] = diam_list[0]
+        precise_diam = 2 * np.sqrt(flow / np.pi)
+
+        # Special case if the precise diameter is larger than the largest given diameter
+        if precise_diam > diam_list[-1]:
+            edges.at[i, "diameter"] = diam_list[-1]
 
         else:
-            precise_diam = 2 * np.sqrt(flow / np.pi)
+            for size in diam_list:
+                if size - precise_diam > 0:
+                    edges.at[i, "diameter"] = size
 
-            if precise_diam > diam_list[-1]:
-                edges.at[i, "diameter"] = diam_list[-1]
-
-            else:
-                for j, size in enumerate(diam_list):
-                    if size - precise_diam > 0:
-                        edges.at[i, "diameter"] = diam_list[j]
-
-                        break
+                    break
 
     return edges
 
 
 def cleaner_and_trimmer(nodes: pd.DataFrame, edges: pd.DataFrame):
-    """Round of calculated values to realistic decimal precisions, and drop columns
-    which were added for intermediate calculations
+    """Remove the columns from the node and conduit dataframes which were only needed for the
+    attribute calculations. Also round off the calculated values to realistic presicions
 
     Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        edges (DataFrame): The conduits of the system along with their attributes
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
 
     Returns:
-        tuple[DataFrame, DataFrame]: Cleaned up nodes and edges data
+        tuple[DataFrame, DataFrame]: Cleaned up nodes and conduit data
     """
 
     nodes = nodes.drop(columns=["considered", "path", "connections"])
 
+    # Special condition if data was obtained from a csv (only for testing purposes)
     if "Unnamed: 0" in nodes.keys():
         nodes = nodes.drop(columns=["Unnamed: 0"])
         edges = edges.drop(columns=["Unnamed: 0"])
@@ -365,7 +351,19 @@ def cleaner_and_trimmer(nodes: pd.DataFrame, edges: pd.DataFrame):
     return nodes, edges
 
 
-def add_outfalls(nodes, edges, settings):
+def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
+    """Add extra nodes for the selected outfall and overflow nodes. Connect them up with new
+    conduits
+
+    Args:
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
+        settings (list): Parameters for the network
+
+    Returns:
+        tuple[DataFrame, DataFrame]: The node and conduit data with extra nodes and conduits
+        for the outfalls and overflows
+    """
 
     for outfall in settings["outfalls"]:
         new_index = len(nodes)
@@ -403,30 +401,7 @@ def add_outfalls(nodes, edges, settings):
 def tester():
     """Only used for testing purposes
     """
-    from matplotlib import pyplot as plt
-    from plotter import height_contour_plotter, diameter_map
-    nodes = pd.read_csv("test_nodes_2.csv")
-    edges = pd.read_csv("test_edges_2.csv")
-    settings = {"outfalls":[86], "overflows":[1, 2, 3], "min_depth":1.1, "min_slope":1/500,
-                "rainfall": 70, "perc_inp": 25, "max_slope": 1/400,
-                "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3]}
-
-    nodes, _ = voronoi_area(nodes, box_extent=50)
-    nodes, edges = flow_and_height(nodes, edges, settings)
-    nodes, edges = flow_amount(nodes, edges, settings)
-    edges = diameter_calc(edges, settings["diam_list"])
-    nodes, edges = cleaner_and_trimmer(nodes, edges)
-    nodes, edges = add_outfalls(nodes, edges, settings)
-
-
-    print(nodes, edges)
-    _ = plt.figure()
-
-    height_contour_plotter(nodes, edges, 121)
-    diameter_map(nodes, edges, 122)
-
-
-    plt.show()
+    print("attribute_calculator script has run")
 
 
 if __name__ == "__main__":

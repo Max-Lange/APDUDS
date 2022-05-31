@@ -1,19 +1,19 @@
-"""OpenStreepMap data extractor and reformator
+"""Defines the OpenStreetMap extraction and conversion functions.
 
 This script defines the functions that facilitate the downloading and reformating
 of road map data from OpenStreetMap (OSM) (using osmnx for the downloading part).
 It also defines the function that splits the obtained edges into smaller equal section
 as per the user defined maximum edge length.
 
-This script requires that `osmnx, pandas and numpy` be installed within the Python
+This script requires that `osmnx`, `pandas` and `numpy` be installed within the Python
 environment you are running this script in.
 
-This file can also be imported as a module and contains the following
-functions:
+This file contains the following functions:
 
-    * extractor - Downloads the wanted area from OSM and reformats the obtained data
-    * splitter - Splits the obtained edges to be smaller than the specified maximum length
-    * main - Only used for testing purposes
+    * extractor - Downloads the wanted area from OpenStreetMap
+    * cleaner - Cleans and standerdizes the data downloaded by the extractor
+    * splitter - Splits the obtained conduits according to the given parameters
+    * tester - Only used for testing purposes
 """
 
 import osmnx as ox
@@ -21,17 +21,16 @@ import pandas as pd
 import numpy as np
 ox.config(use_cache=False)
 
-
 def extractor(coords: list, aggregation_size=15):
-    """Downloads the road network for the selected bounding box from OpenStreetMap using osmnx
+    """Downloads the road network from OpenStreetMap, and filters out the unwanted data
 
     Args:
-        coords (list): nort, south, east and west coordinates of the wanted bountding box
-        aggregation_size (int, optional): Max distance for which nearby points are
-        consolidated. Defaults to 10.
+        coords (list): noth, south, east and west coordinates of the desired bounding box
+        aggregation_size (int, optional): Max distance by which to aggrigate nearby nodes.
+        Defaults to 15.
 
     Returns:
-        tuple: Two Dataframes containing the node and edge data respectively
+        tuple[DataFrame, DataFrame]: The node and conduit data of the network
     """
 
     # Download osm data, reproject into meter-using coordinate system, consolidate nearby nodes
@@ -47,7 +46,7 @@ def extractor(coords: list, aggregation_size=15):
     nodes_reset = osm_nodes.reset_index()
     edges_reset = osm_edges.reset_index()
 
-    # Create new nodes and edges dataframe which only contain the wanted data
+    # Create new nodes and edges dataframe which only contain the desired data
     int_from = [int(edges_reset.u[i]) for i in range(len(edges_reset))]
     int_to = [int(edges_reset.v[i]) for i in range(len(edges_reset))]
     edges = pd.DataFrame({"from":int_from,
@@ -60,14 +59,14 @@ def extractor(coords: list, aggregation_size=15):
 
 
 def cleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
-    """_summary_
+    """Standerdizes and cleans the data downloaded from OpenStreetMap by the extractor
 
     Args:
-        nodes (pd.DataFrame): positional (x, y) data of the nodes
-        edges (pd.DataFrame): from, to and length data of the edges (lines) of the network
+        nodes (pd.DataFrame): The node data for a network
+        edges (pd.DataFrame): The conduit data for a network
 
     Returns:
-        tuple[Dataframe, Dataframe]: Dataframes for the (filtered) nodes and edges
+        tuple[DataFrame, DataFrame]: The node and conduit data with updated and cleaned values
     """
 
     nodes = nodes.copy()
@@ -97,22 +96,26 @@ def cleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
 
     filtered_edges.length = filtered_edges.length.round(decimals=2)
     filtered_edges[["from", "to"]] = filtered_edges[["from", "to"]].astype(int)
+
     return nodes, filtered_edges
 
 
 def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
-    """_summary_
+    """Splits conduits which exceed a certain lenght into equally sized section,
+    and connects them back up by adding nodes in the splits.
 
     Args:
-        nodes (DataFrame): positional (x, y) data of the nodes
-        edges (DataFrame): from, to and length data of the edges (lines) of the network
-        max_space (int): maximum space between two nodes (max length of an edge)
+        nodes (pd.DataFrame): The node data for a network
+        edges (pd.DataFrame): The conduit data for a network
+        max_space (int): The maximum allowable manhole spacing by which the conduits will be split
 
     Returns:
-        tuple[Dataframe, Dataframe]: Dataframes for the nodes and (split) edges
+        tuple[DataFrame, DataFrame]: The node and conduit data with extra nodes and conduits added
+        where conduits needed to be split.
     """
 
     nodes = nodes.copy()
+    # Create a new dataframe to be filled with the correct edges
     new_edges = pd.DataFrame(columns=["from", "to", "length"])
     for _, line in edges.iterrows():
         # If the line is below the max_length, just add it to the new dataframe
@@ -148,6 +151,7 @@ def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
             # Special case for the last edge
             new_edges.loc[len(new_edges)] = [index_i, line["to"], new_length]
 
+    # Clean up and round of the newly constructed data
     nodes.x = nodes.x.round(decimals=2)
     nodes.y = nodes.y.round(decimals=2)
     new_edges.length = new_edges.length.round(decimals=2)
@@ -155,14 +159,9 @@ def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
     return nodes, new_edges
 
 
-def main():
+def tester():
     """Only used for testing purposes"""
-    nodes, edges = extractor([51.9293, 51.9207, 4.8378, 4.8176])
-    nodes, edges = cleaner(nodes, edges)
-    nodes, edges = splitter(nodes, edges, 150)
-
-    nodes.to_csv("test_nodes_2.csv")
-    edges.to_csv("test_edges_2.csv")
+    print("osm_extractor script has run")
 
 if __name__ == "__main__":
-    main()
+    tester()

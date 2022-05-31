@@ -1,15 +1,18 @@
 """Defining file for all plotting functions
 
-This script defines the functions that facilitate the creations of all the different kinds
-of plots that are needed by the program.
-
-This script requires that `matplotlib and pandas` be installed within the Python
+This script requires that `matplotlib`, `numpy` and `pandas` be installed within the Python
 environment you are running this script in.
 
-This file can also be imported as a module and contains the following
-functions:s
+This file contains the following major functions:
 
-    * network_plotter - Creates a graph containing the nodes as points and the edges as lines
+    * network_plotter - Creates a plot containing the nodes (as points)
+     and the conduits (as lines)
+    * voronoi_plotter - Creates a plot of the nodes of a network, and the
+    subcatchment area polygons
+    * height_contour_plotter - Creates a plot containing a network, and a filled in contour plot
+    of the depth values of the nodes
+    * diameter_map - Creates a plot of the conduits of a network, with the thickness of the lines
+    corresponding to the relative diameter size
 """
 
 from matplotlib import pyplot as plt
@@ -17,15 +20,17 @@ import numpy as np
 from pandas import DataFrame
 
 def network_plotter(nodes: DataFrame, edges: DataFrame, subplot_number: int, numbered=False):
-    """Plots the nodes and edges for the given network
+    """Plots the nodes and conduits for a network as points and lines respectivly
 
     Args:
-        nodes (DataFrame): positional (x, y) data of the nodes
-        edges (DataFrame): from, to data of the edges
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
         subplot_number (int): Ax to plot to
     """
+
     axes = plt.subplot(subplot_number)
     plt.plot(nodes.x, nodes.y, "o")
+
     for _, line in edges.iterrows():
         x_coord = [nodes.at[int(line["from"]), "x"], nodes.at[int(line["to"]), "x"]]
         y_coord = [nodes.at[int(line["from"]), "y"], nodes.at[int(line["to"]), "y"]]
@@ -42,17 +47,17 @@ def network_plotter(nodes: DataFrame, edges: DataFrame, subplot_number: int, num
 
 
 def voronoi_plotter(nodes: DataFrame, voro, subplot_number: int):
-    """Fill a plot with the nodes as points and the vornoi areas a colored polygons
+    """Plot the nodes as points and the subcathment areas a colored polygons
 
     Args:
-        nodes (DataFrame): x and y positions of the nodes
+        nodes (DataFrame): The node data for a network
         voro (freud.locality.voronoi): freud voronoi instance containting polygon information
         subplot_number (int): Ax to plot to
     """
 
+    axes = plt.subplot(subplot_number)
     points = np.array([[nodes.x[i], nodes.y[i], 0] for i in range(len(nodes))])
 
-    axes = plt.subplot(subplot_number)
     voro.plot(ax=axes, color_by_sides=False)
     axes.scatter(points[:, 0], points[:, 1])
 
@@ -65,8 +70,8 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
     network laid overtop.
 
     Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        edges (DataFrame): The conduits of the system along with their attributes
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
         subplot_number (int): Ax to plot to
     """
 
@@ -83,6 +88,7 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
 
     outfalls = nodes.index[nodes['role'] == "outfall"].tolist()
     for outfall in outfalls:
+        # Special first case for adding a label
         if outfall == outfalls[0]:
             axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv", label="Outfall")
 
@@ -91,22 +97,27 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
 
     overflows = nodes.index[nodes['role'] == "overflow"].tolist()
     for overflow in overflows:
+        # Special first case for adding a label
         if overflow == overflows[0]:
             axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^", label="Overflow")
 
         else:
             axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^")
 
+    # Add the colored contours
     x_coords = nodes.x[(nodes.role == "node") | (nodes.role == "outfall")]
     y_coords = nodes.y[(nodes.role == "node") | (nodes.role == "outfall")]
     depths = nodes.depth[(nodes.role == "node") | (nodes.role == "outfall")]
     contourf = axes.tricontourf(x_coords, y_coords, depths)
 
+    # Add extra points on the end to get a larger graph extent
     axes.scatter([nodes.x.min()-50, nodes.x.max()+50],
                  [nodes.y.min()-50, nodes.y.max()+50],
                  color="white")
+
     cbar = fig.colorbar(contourf, ax=axes)
     cbar.set_label("Depth below ground [m]")
+
     axes.set_title("Contour Map of the Needed Node Depth")
     axes.legend()
     plt.axis("scaled")
@@ -117,8 +128,8 @@ def diameter_map(nodes: DataFrame, edges: DataFrame, subplot_number:int):
     the diameter size.
 
     Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        edges (DataFrame): The conduits of the system along with their attributes
+        nodes (DataFrame): The node data of a network
+        edges (DataFrame): The conduit data of a network
         diam_list (list[float]): List of the viable diameters (in [m])
         subplot_number (int): Ax to plot to
     """
@@ -136,6 +147,7 @@ def diameter_map(nodes: DataFrame, edges: DataFrame, subplot_number:int):
 
     outfalls = nodes.index[nodes['role'] == "outfall"].tolist()
     for outfall in outfalls:
+        # Special first case for adding a label
         if outfall == outfalls[0]:
             axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv", label="Outfall")
 
@@ -144,6 +156,7 @@ def diameter_map(nodes: DataFrame, edges: DataFrame, subplot_number:int):
 
     overflows = nodes.index[nodes['role'] == "overflow"].tolist()
     for overflow in overflows:
+        # Special first case for adding a label
         if overflow == overflows[0]:
             axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^", label="Overflow")
 
@@ -154,3 +167,12 @@ def diameter_map(nodes: DataFrame, edges: DataFrame, subplot_number:int):
     axes.set_title("Relative Diameters of the Conduits")
     axes.legend()
     plt.axis("scaled")
+
+
+def tester():
+    """Only used for testin purposes"""
+    print("The plotter script has run")
+
+
+if __name__ == "__main__":
+    tester()

@@ -1,19 +1,27 @@
-"""Defines the function needed for creating the SWMM file
+"""Defining file for creating a swmm file
+
+This script requires that `pandas` be installed within the Python
+environment you are running this script in.
+
+This file contains the following major functions:
+
+    * swmm_file_creator - Creates a txt file of the networkwhich can be used in the swmm software
+    * tester - Only used for testing purposes
 """
 
 from datetime import datetime
 import pandas as pd
 
 def swmm_file_creator(nodes: pd.DataFrame, edges: pd.DataFrame, voro, settings: dict):
-    """Creates a .txt file which follows the System Water Management Model format, so that the
-    created network can be used in that software
+    """Creates a .txt file which follows the System Water Management Model format (SWMM),
+    so that the created network can be used in that software
 
     Args:
-        nodes (DataFrame): The nodes of the system along with their attributes
-        edges (DataFrame): The conduits of the system along with their attributes
-        voro (locality.voronoi): Voronoi calculator of the subcatchments areas
-        settings (dict): system parameters
-        filename (str): name of the SWMM file
+        nodes (DataFrame): The node data of a network
+        edges (DataFrame): The conduit data of a network
+        voro (freud.locality.voronoi): voronoi object of the nodes of a network
+        settings (dict): Parameters for a network
+        filename (str): Desired name for the SWMM file
     """
 
     with open(f"{settings['filename']}.txt", 'w', encoding="utf8") as file:
@@ -76,11 +84,7 @@ def swmm_file_creator(nodes: pd.DataFrame, edges: pd.DataFrame, voro, settings: 
 
 
 def create_title():
-    """Creates a list of strings for the title section of a swmm file
-
-    Returns:
-        list[str]: All lines for the title section
-    """
+    """Returns a list of strings for the title section"""
 
     title = ["[TITLE]",
              ";;Project Title/Notes",
@@ -89,14 +93,7 @@ def create_title():
 
 
 def create_options(date: str):
-    """Creates a list of strings for the options section of a swmm file
-
-    Args:
-        date (str): The current date (mm/dd/yyyy format)
-
-    Returns:
-        list[str]: All lines for the options section
-    """
+    """Returns a list of strings for the options section"""
 
     options = ["[OPTIONS]",
                ";;Option             Value",
@@ -113,7 +110,7 @@ def create_options(date: str):
               f"REPORT_START_DATE    {date}",
                "REPORT_START_TIME    00:00:00",
               f"END_DATE             {date}",
-               "END_TIME             06:00:00",
+               "END_TIME             12:00:00",
                "SWEEP_START          1/1",
                "SWEEP_END            12/31",
                "DRY_DAYS             0",
@@ -140,11 +137,7 @@ def create_options(date: str):
 
 
 def create_evaporation():
-    """Creates a list of strings for the evaporation section of a swmm file
-
-    Returns:
-        list[str]: All lines for the evaportaion section
-    """
+    """Returns a list of strings for the evaporation section"""
 
     evaporation = ["[EVAPORATION]",
                    ";;Data Source    Parameters",
@@ -156,11 +149,7 @@ def create_evaporation():
 
 
 def create_raingage():
-    """Creates a list of strings for the raingage section of a swmm file
-
-    Returns:
-        list[str]: All lines for the raingage section
-    """
+    """Returns a list of strings for the raingage section"""
 
     raingages = ["[RAINGAGES]",
                  ";;Name           Format    Interval SCF      Source ",
@@ -171,15 +160,7 @@ def create_raingage():
 
 
 def create_subcatchments(nodes: pd.DataFrame, settings: dict):
-    """Creates a list of strings for the subcathments section of a swmm file
-
-    Args:
-        nodes (DataFrame): The nodes data
-        settings (dict): The system parameters
-
-    Returns:
-        list[str]: All lines for the subcathments section
-    """
+    """Returns a list of strings for the subcatchments section"""
 
     subcatchments = ["[SUBCATCHMENTS]",
                      ";;Name           Rain Gage        Outlet           Area     %Imperv  \
@@ -193,7 +174,7 @@ Width    %Slope   CurbLen  SnowPack",
             catchment = "sub_" + str(node_index) + (17 - 4 - nr_length) * " "
             catchment += "General" + (17 - 7) * " "
             catchment += "j_" + str(node_index) + (17 - 2 - nr_length) * " "
-            catchment += str(round(node.area * 0.0001, 4)) + \
+            catchment += str(round(node.area / 10000, 4)) + \
 (9 - len(str(round(node.area * 0.0001, 4)))) * " "
             catchment += str(settings['perc_inp']) + (9 - len(str(settings['perc_inp']))) * " "
             catchment += "500      0.5      0"
@@ -204,14 +185,7 @@ Width    %Slope   CurbLen  SnowPack",
 
 
 def create_subcatchement_subareas(nodes: pd.DataFrame):
-    """Creates a list of strings for the subareas section of a swmm file
-
-    Args:
-        nodes (DataFrame): The nodes data
-
-    Returns:
-        list[str]: All lines for the subareas section
-    """
+    """Returns a list of strings for the subareas section"""
 
     subareas = ["[SUBAREAS]",
                 ";;Subcatchment   N-Imperv   N-Perv     S-Imperv   S-Perv     PctZero    \
@@ -231,14 +205,7 @@ RouteTo    PctRouted",
 
 
 def create_subcatchement_infiltration(nodes: pd.DataFrame):
-    """Creates a list of strings for the infiltration section of a swmm file
-
-    Args:
-        nodes (DataFrame): The nodes data
-
-    Returns:
-        list[str]: All lines for the infiltration section
-    """
+    """Returns a list of strings for the infilatrion section"""
 
     infiltration = ["[INFILTRATION]",
                     ";;Subcatchment   Param1     Param2     Param3     Param4     Param5",
@@ -256,14 +223,7 @@ def create_subcatchement_infiltration(nodes: pd.DataFrame):
 
 
 def create_junctions(nodes: pd.DataFrame):
-    """Creates a list of strings for the junctions section of a swmm file
-
-    Args:
-        nodes (DataFrame): The nodes data
-
-    Returns:
-        list[str]: All lines for the junctions section
-    """
+    """Returns a list of strings for the junctions section"""
 
     junctions = ["[JUNCTIONS]",
                  ";;Name           Elevation  MaxDepth   InitDepth  SurDepth   Aponded",
@@ -282,14 +242,7 @@ def create_junctions(nodes: pd.DataFrame):
 
 
 def create_outfalls(nodes: pd.DataFrame):
-    """Creates a list of strings for the outfalls section of a swmm file
-
-    Args:
-        nodes (DataFrame): The nodes data
-
-    Returns:
-        list[str]: All lines for the outfalls section
-    """
+    """Returns a list of strings for the outfalls section"""
 
     outfalls = ["[OUTFALLS]",
                 ";;Name           Elevation  Type       Stage Data       Gated    Route To",
@@ -309,14 +262,7 @@ def create_outfalls(nodes: pd.DataFrame):
 
 
 def create_conduits(edges: pd.DataFrame):
-    """Creates a list of strings for the conduits section of a swmm file
-
-    Args:
-        edges (DataFrame): The conduits data
-
-    Returns:
-        list[str]: All lines for the conduits section
-    """
+    """Returns a list of strings for the conduits section"""
 
     conduits = ["[CONDUITS]",
                 ";;Name           From Node        To Node          Length     Roughness  \
@@ -337,14 +283,7 @@ InOffset   OutOffset  InitFlow   MaxFlow",
 
 
 def create_cross_section(edges: pd.DataFrame):
-    """Creates a list of strings for the xsections section of a swmm file
-
-    Args:
-        edges (DataFrame): The conduits data
-
-    Returns:
-        list[str]: All lines for the xsections section
-    """
+    """Returns a list of strings for the xsections section"""
 
     xsections = ["[XSECTIONS]",
                  ";;Link           Shape        Geom1            Geom2      Geom3      \
@@ -364,15 +303,7 @@ Geom4      Barrels    Culvert",
 
 
 def create_timeseries(settings: dict, date: str):
-    """Creates a list of strings for the timeseries section of a swmm file
-
-    Args:
-        settigns (dict): The system parameters
-        date (str): The current date (mm/dd/yyyy format)
-
-    Returns:
-        list[str]: All lines for the timeseries section
-    """
+    """Returns a list of strings for the timeseries section"""
 
     timeseries = ["[TIMESERIES]",
                   ";;Name           Date       Time       Value",
@@ -394,18 +325,15 @@ def create_timeseries(settings: dict, date: str):
             str_time += str(minutes)
 
         step += str_time + (11 - len(str_time)) * " "
-        step += str(settings["rainfall"])
+        step += str((settings["total_rain"] * 10) / (settings["duration"] * 10))
 
         timeseries.append(step)
     timeseries.append("\n")
     return timeseries
 
-def create_report():
-    """Creates a list of strings for the report section of a swmm file
 
-    Returns:
-        list[str]: All lines for the report section
-    """
+def create_report():
+    """Returns a list of strings for the report section"""
 
     report = ["[REPORT]",
               ";;Reporting Options",
@@ -417,11 +345,7 @@ def create_report():
 
 
 def create_tags():
-    """Creates a list of strings for the tags section of a swmm file
-
-    Returns:
-        list[str]: All lines for the tags section
-    """
+    """Returns a list of strings for the tags section"""
 
     tags = ["[TAGS]",
             "\n"]
@@ -429,14 +353,7 @@ def create_tags():
 
 
 def create_map_settings(nodes: pd.DataFrame):
-    """Creates a list of strings for the map settings section of a swmm file
-
-    Args:
-        nodes (DataFrame): The nodes data
-
-    Returns:
-        list[str]: All lines for the map settings section
-    """
+    """Returns a list of strings for the map settings section"""
 
     map_settings = ["[MAP]",
                    f"DIMENSIONS {round(nodes.x.min()-200, 2)} {round(nodes.y.min()-200, 2)} \
@@ -447,14 +364,7 @@ def create_map_settings(nodes: pd.DataFrame):
 
 
 def create_junctions_coordinates(nodes: pd.DataFrame):
-    """Creates a list of strings for the junction coordinates section of a swmm file
-
-    Args:
-        nodes (DataFrame): The nodes data
-
-    Returns:
-        list[str]: All lines for the junction coordinates section
-    """
+    """Returns a list of strings for the junctions coordinates section"""
 
     coordinates = ["[COORDINATES]",
                    ";;Node           X-Coord            Y-Coord",
@@ -468,16 +378,9 @@ def create_junctions_coordinates(nodes: pd.DataFrame):
     coordinates.append("\n")
     return coordinates
 
+
 def create_subcatchment_polygons(nodes: pd.DataFrame, voro):
-    """Creates a list of strings for the subcatchment polygons section of a swmm file
-
-    Args:
-        nodes (DataFrame): The nodes data
-        voro (freud.locality.voronoi): A voronoi object of the nodes
-
-    Returns:
-        list[str]: All lines for the subcatchment polygons section
-    """
+    """Returns a list of strings for the polygons section"""
 
     polygons = ["[Polygons]",
                 ";;Subcatchment   X-Coord            Y-Coord",
@@ -501,14 +404,7 @@ def create_subcatchment_polygons(nodes: pd.DataFrame, voro):
 
 
 def create_symbols(nodes: pd.DataFrame):
-    """Creates a list of strings for the symbols section of a swmm file
-
-    Args:
-        nodes (DataFrame): The nodes data
-
-    Returns:
-        list[str]: All lines for the symbols section
-    """
+    """Returns a list of strings for the symbols section"""
 
     symbols = ["[SYMBOLS]",
                 ";;Gage           X-Coord            Y-Coord",
@@ -524,19 +420,8 @@ def create_symbols(nodes: pd.DataFrame):
 
 
 def tester():
-    """For testing purposes only
-    """
-
-    from attribute_calculator import voronoi_area
-    nodes = pd.read_csv("write_test_nodes_2.csv")
-    edges = pd.read_csv("write_test_edges_2.csv")
-
-    settings = {"outfalls":[130], "min_depth":1.1, "min_slope":1/500,
-                "rainfall": 70, "perc_inp": 23, "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
-                "filename": "test_swmm"}
-    _, voro = voronoi_area(nodes)
-
-    swmm_file_creator(nodes, edges, voro, settings)
+    """For testing purposes only"""
+    print("The swmm_formater script has run")
 
 
 if __name__ == "__main__":
