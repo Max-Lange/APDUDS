@@ -10,6 +10,7 @@ This file contains the following major functions:
     * flow_amount - Determine the amount of water flow through each conduit
     * diameter_calc - Determine the appropriate diameter for eac conduit
     * cleaner_and_trimmer - Remove intermediate information and precision from the data
+    * attribute_calculations - Runs the entire attribute calculation process
     * tester - Only used for testing purposes
 """
 
@@ -304,7 +305,8 @@ def diameter_calc(edges: pd.DataFrame, diam_list: list[float]):
         elif precise_diam > diam_list[-1]:
             edges.at[i, "diameter"] = diam_list[-1]
             print(f"WARNING: Conduit between node {int(edge['from'])} and {int(edge['to'])} \
-requires a larger diameter than is available ({round(precise_diam, 3)} m). Capped to {diam_list[-1]}")
+requires a larger diameter than is available ({round(precise_diam, 3)} m). \
+Capped to {diam_list[-1]}")
 
         else:
             for size in diam_list:
