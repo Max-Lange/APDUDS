@@ -40,7 +40,7 @@ def step_1(coords: list[float], space: int, block: bool = False):
         tuple[DataFrame, DataFrame]: The node and conduit data of the created network
     """
 
-    print("\nStarting the OpenStreetMap download. This make take some time, please only close the \
+    print("\nStarting the OpenStreetMap download. This may take some time, please only close the \
 software after 5 minutes of no response....")
     nodes, edges = extractor(coords)
 
@@ -131,16 +131,16 @@ def tester():
 
 
     test_settings = {"outfalls":[111],
-                     "overflows":[32, 136, 140],
+                     "overflows":[23, 65, 118],
                      "min_depth":1.1,
                      "min_slope":1/500,
                      "peak_rain": 36,
                      "perc_inp": 50,
                      "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5],
                      "filename": "test_swmm",
-                     "max_slope": 1/350,
+                     "max_slope": 1/450,
                      "duration": 2,
-                     "polygons": "n"}
+                     "polygons": "y"}
 
     nodes, edges, voro = step_2(nodes, edges, test_settings, block=True)
 
