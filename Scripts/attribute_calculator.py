@@ -10,6 +10,7 @@ This file contains the following major functions:
     * flow_amount - Determine the amount of water flow through each conduit
     * diameter_calc - Determine the appropriate diameter for eac conduit
     * cleaner_and_trimmer - Remove intermediate information and precision from the data
+    * attribute_calculations - Runs the entire attribute calculation process
     * tester - Only used for testing purposes
 """
 
@@ -294,12 +295,18 @@ def diameter_calc(edges: pd.DataFrame, diam_list: list[float]):
 
     edges["diameter"] = None
 
-    for i, flow in enumerate(edges["flow"]):
-        precise_diam = 2 * np.sqrt(flow / np.pi)
+    for i, edge in edges.iterrows():
+        precise_diam = 2 * np.sqrt(edge["flow"] / np.pi)
+
+        if edge["flow"] == 0:
+            edges.at[i, "diameter"] = 0
 
         # Special case if the precise diameter is larger than the largest given diameter
-        if precise_diam > diam_list[-1]:
+        elif precise_diam > diam_list[-1]:
             edges.at[i, "diameter"] = diam_list[-1]
+            print(f"WARNING: Conduit between node {int(edge['from'])} and {int(edge['to'])} \
+requires a larger diameter than is available ({round(precise_diam, 3)} m). \
+Capped to {diam_list[-1]}")
 
         else:
             for size in diam_list:
@@ -358,7 +365,7 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     Args:
         nodes (DataFrame): The node data for a network
         edges (DataFrame): The conduit data for a network
-        settings (list): Parameters for the network
+        settings (dict): Parameters for the network
 
     Returns:
         tuple[DataFrame, DataFrame]: The node and conduit data with extra nodes and conduits
@@ -397,6 +404,62 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
 
     return nodes, edges
 
+
+def loop(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
+    """Runs the main attibute calculations loop for a given network
+
+    Args:
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
+        settings (dict): Parameters for the network
+
+    Returns:
+        tuple[DataFrame, DataFrame]: The node and conduit data which the attribute values updated
+    """
+
+    nodes, edges = flow_and_depth(nodes, edges, settings)
+    nodes, edges = flow_amount(nodes, edges, settings)
+    edges = diameter_calc(edges, settings["diam_list"])
+
+    return nodes, edges
+
+
+def attribute_calculation(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
+    """Does the complete attribute calculation step for a given network
+
+    Args:
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
+        settings (dict): Parameters for the network
+
+    Returns:
+        tuple[DataFrame, DataFrame]: The node and conduit data with newly added and updated
+        attribute values
+    """
+    nodes, voro = voronoi_area(nodes)
+
+    nodes_copy = nodes.copy()
+    edges_copy = edges.copy()
+
+    nodes, edges = loop(nodes, edges, settings)
+    print("Main attribute calculations completed, moving on to overflow diameter calculations...")
+
+    loop_setting = settings.copy()
+    for overflow in settings["overflows"]:
+        loop_setting["outfalls"] = [overflow]
+        _, loop_edges = loop(nodes_copy, edges_copy, loop_setting)
+
+        for i in range(len(edges)):
+            if edges.at[i, "diameter"] < loop_edges.at[i, "diameter"]:
+                edges.at[i, "diameter"] = loop_edges.at[i, "diameter"]
+                edges.at[i, "flow"] = loop_edges.at[i, "flow"]
+
+        print(f"Calculations for the overflow at node {overflow} completed...")
+
+    nodes, edges = cleaner_and_trimmer(nodes, edges)
+    nodes, edges = add_outfalls(nodes, edges, settings)
+
+    return nodes, edges, voro
 
 def tester():
     """Only used for testing purposes
