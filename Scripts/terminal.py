@@ -129,8 +129,7 @@ def step_1_input():
     space = manhole_space_input()
 
     print("\nThe conduit network and manhole distribution for the area you selected will \
-now be calculated.\n A set of figures will appear. \
-Close these figures once you are ready to proceed.")
+now be calculated.\nA figure will appear, after which you can proceed to the next step.")
 
     return coords, space
 
@@ -173,9 +172,9 @@ Please enter the described information to enable the next set of calculation ste
         print("\n\nMaximum slope should always be larger than the minimum slope\n")
         settings["max_slope"] = float(input("Maximum slope [m/m]: "))
 
-    print("\n\nEnter the peak rainfall for the design storm:\n\
-(Should be a positive integer, for example: 70)\n")
-    settings["peak_rain"] = int(input("The peak rainfall [L/s/ha]: "))
+    print("\n\nEnter the peak rainfall value for the design storm:\n\
+(Should be a positive integer, for example: 23)\n")
+    settings["peak_rain"] = int(input("The peak rainfall value [mm/h]: ")) / 0.36
 
     print("\n\nThe average percentage of inpervious ground coverage of the area:\n\
 (Should be a positive integer number between 0 and 100, for example: 25)\n")
@@ -202,9 +201,6 @@ please give some final specifications:")
     print("\n\nA timeseries will be created from your given design storm value.\n\
 Please specify the duration of this design storm in whole hours (for example: 2, max 12)\n")
     settings["duration"] = int(input("Design storm duration [hours]: "))
-
-    print("\n\nAlso specify the total amount of rain that will fall (for example: 23)\n")
-    settings["total_rain"] = int(input("Total rainfall [mm]: "))
 
     print("\n\nA name for the SWMM file. This file will be a .txt file.\n\
 The filename cannot contain any spaces or quotes (for example: test_file)\n")

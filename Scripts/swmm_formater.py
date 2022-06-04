@@ -325,7 +325,7 @@ def create_timeseries(settings: dict, date: str):
             str_time += str(minutes)
 
         step += str_time + (11 - len(str_time)) * " "
-        step += str((settings["total_rain"] * 10) / (settings["duration"] * 10))
+        step += str(settings["peak_rain"] * 0.36)
 
         timeseries.append(step)
     timeseries.append("\n")

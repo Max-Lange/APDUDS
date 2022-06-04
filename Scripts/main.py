@@ -20,8 +20,7 @@ from swmm_formater import swmm_file_creator
 from osm_extractor import extractor, cleaner, splitter
 from plotter import network_plotter, voronoi_plotter, height_contour_plotter, diameter_map
 from terminal import step_1_input, step_2_input, step_3_input, area_check
-from attribute_calculator import voronoi_area, flow_and_depth, flow_amount,\
-diameter_calc, cleaner_and_trimmer, add_outfalls
+from attribute_calculator import attribute_calculation
 from matplotlib import pyplot as plt
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
@@ -41,7 +40,8 @@ def step_1(coords: list[float], space: int, block: bool = False):
         tuple[DataFrame, DataFrame]: The node and conduit data of the created network
     """
 
-    print("\nStarting the OpenStreetMap download...")
+    print("\nStarting the OpenStreetMap download. This make take some time, please only close the \
+software after 5 minutes of no response....")
     nodes, edges = extractor(coords)
 
     print("Completed the OpenStreetMap download, starting the data cleaning...")
@@ -72,25 +72,10 @@ def step_2(nodes: DataFrame, edges: DataFrame, settings: dict, block: bool = Fal
         values for the attributes, as well as a voronoi object for use in the SWMM file creation
     """
 
-    print("\nStarting the subcatchment area calculation...")
-    nodes, voro = voronoi_area(nodes)
+    print("\nStarting the attribute calculation step...")
+    nodes, edges, voro = attribute_calculation(nodes, edges, settings)
+    print("Completed the attribute calculations, plotting graphs...")
 
-    print("Completed the subcatchment calculations, \
-starting the flow direction and depth calculations...")
-    nodes, edges = flow_and_depth(nodes, edges, settings)
-
-    print("Completed the flow direction and depth calculations, \
-starting the flow amount calculations...")
-    nodes, edges = flow_amount(nodes, edges, settings)
-
-    print("Completed the flow amount calculations, starting the diameter calculations...")
-    edges = diameter_calc(edges, settings["diam_list"])
-
-    print("Completed the diameter calculations, startin the data cleaning and detailing...")
-    nodes, edges = cleaner_and_trimmer(nodes, edges)
-    nodes, edges = add_outfalls(nodes, edges, settings)
-
-    print("Completed the data cleaning and detailing, plotting graphs...")
     fig = plt.figure()
     voronoi_plotter(nodes, voro, 221)
     height_contour_plotter(nodes, edges, 222, fig)
@@ -149,16 +134,16 @@ def tester():
                      "overflows":[32, 136, 140],
                      "min_depth":1.1,
                      "min_slope":1/500,
-                     "peak_rain": 90,
+                     "peak_rain": 36,
                      "perc_inp": 50,
-                     "diam_list": [0.25, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
+                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5],
                      "filename": "test_swmm",
                      "max_slope": 1/350,
                      "duration": 2,
-                     "total_rain": 23,
                      "polygons": "n"}
 
-    nodes, edges, voro  = step_2(nodes, edges, test_settings, block=True)
+    nodes, edges, voro = step_2(nodes, edges, test_settings, block=True)
+
     step_3(nodes, edges, voro, test_settings)
 
 
