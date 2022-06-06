@@ -152,9 +152,9 @@ Please enter the described information to enable the next set of calculation ste
     outfalls = input("Outfall point index: ").split()
     settings["outfalls"] = [int(x) for x in outfalls]
 
-    print("\n\nThe indicies of the points which you want to designate as overflow points:\n\
-(Positive integers seperate by space, for examle: 23 65 118)\n")
-    overflows = input("Overflows points indicies: ").split()
+    print("\n\nThe indices of the points which you want to designate as overflow points:\n\
+(Positive integers separate by space, for example: 23 65 118)\n")
+    overflows = input("Overflows points indices: ").split()
     settings["overflows"] = [int(x) for x in overflows]
 
     print("\n\nThe minimum depth below the ground at which conduits can be installed:\n\
@@ -162,10 +162,10 @@ Please enter the described information to enable the next set of calculation ste
     settings["min_depth"] = float(input("Minimum installation depth [m]: "))
 
     print("\n\nEnter the required minimum slope for the conduits:\n\
-(Should be a postive decimal number, for example: 0.002)\n")
+(Should be a positive decimal number, for example: 0.002)\n")
     settings["min_slope"] = float(input("Minimum slope [m/m]: "))
 
-    print("\n\nDo you want to enter a maxmimum allowable slope as well?")
+    print("\n\nDo you want to enter a maximum allowable slope as well?")
     choice = yes_no_choice()
 
     if choice == "y":
@@ -176,12 +176,12 @@ Please enter the described information to enable the next set of calculation ste
 (Should be a positive integer, for example: 23)\n")
     settings["peak_rain"] = int(input("The peak rainfall value [mm/h]: ")) / 0.36
 
-    print("\n\nThe average percentage of inpervious ground coverage of the area:\n\
+    print("\n\nThe average percentage of impervious ground coverage of the area:\n\
 (Should be a positive integer number between 0 and 100, for example: 25)\n")
     settings["perc_inp"] = int(input("Percentage of impervious ground [%]: "))
 
     print("\n\nA list of the available diameters of the conduits:\n\
-(Should be a series of number seperated by spaces, for example: 150 300 500 1000)\n")
+(Should be a series of number separated by spaces, for example: 150 300 500 1000)\n")
     diam_list = input("List of available diameters [mm]: ").split()
     settings["diam_list"] = [int(x) / 1000 for x in diam_list]
 
@@ -216,7 +216,7 @@ APDUDS.\nPlease note, that in order to open this file in SWMM, you will need to 
 the 'all files' option in the folder explorer to be able to see the file in the directory.")
 
     print("\nThis concludes this use session of APDUDS, \
-the software will close once the file hase been created.")
+the software will close once the file has been created.")
 
     return settings
 

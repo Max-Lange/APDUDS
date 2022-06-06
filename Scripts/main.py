@@ -140,7 +140,7 @@ def tester():
                      "filename": "test_swmm",
                      "max_slope": 1/450,
                      "duration": 2,
-                     "polygons": "y"}
+                     "polygons": "n"}
 
     nodes, edges, voro = step_2(nodes, edges, test_settings, block=True)
 
