@@ -1,3 +1,6 @@
+# Git ignore VSc workspace
+APDUDS.code-workspace
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
