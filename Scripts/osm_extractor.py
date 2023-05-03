@@ -23,7 +23,7 @@ import numpy as np
 ox.config(use_cache=False)
 
 def extractor(coords: list, aggregation_size=15):
-    """Downloads the road network from OpenStreetMap, and filters out the unwanted data
+    """Downloads the wanted road network from OpenStreetMap, and filters out the unwanted data
 
     Args:
         coords (list): noth, south, east and west coordinates of the desired bounding box
@@ -35,8 +35,9 @@ def extractor(coords: list, aggregation_size=15):
     """
 
     # Download osm data, reproject into meter-using coordinate system, consolidate nearby nodes
-    osm_map = ox.graph_from_bbox(coords[0], coords[1], coords[2], coords[3], network_type="drive")
-    #Cf tertiary road, residential road, secondary road, service road, living street, pedestrian way, 
+    cf = '["highway"~"secondary|tertiary|residential|living_street|service|pedestrian|busway"]'
+    osm_map = ox.graph_from_bbox(coords[0], coords[1], coords[2], coords[3], custom_filter=cf)
+
     osm_projected = ox.project_graph(osm_map)
     osm_consolidated = ox.consolidate_intersections(osm_projected,
                                                     tolerance=aggregation_size,

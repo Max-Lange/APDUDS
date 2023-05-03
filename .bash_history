@@ -20,3 +20,16 @@ git remove -v
 git remote -v
 git push -u origin main
 git status
+git branch TerminalFixes
+git switch TerminalFixes
+git status
+git status
+git status
+git add -A
+git status
+git switch main
+git branc
+git branch
+git merge Terminal Fixes
+git merge TerminalFixes
+git status
