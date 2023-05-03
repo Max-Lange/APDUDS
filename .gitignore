@@ -9,6 +9,7 @@ test_swmm.txt
 .bash_history
 .gitconfig
 .lesshst
+test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
