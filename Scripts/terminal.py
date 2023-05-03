@@ -12,6 +12,8 @@ This file contains the following major functions:
     * step_3_input - Create the explanations and input space for the SWMM file creation step
     * tester - Only used for testing purposes
 """
+from numpy import (cos, sin, pi, array)
+from vg import angle
 
 def area_check(coords: list[float], threshold: int):
     """Checks wether a given area is larger than a certain threshold of km^2,
@@ -21,15 +23,34 @@ def area_check(coords: list[float], threshold: int):
         coords (list[float]): north, south, east and west coordinates of an area
         threshold (int): The value to check against
     """
+    def coord_vector(x, y):
+        X = 6378 * cos(x * 2 * pi / 360) * cos(y * 2 * pi / 360)
+        Y = 6378 * cos(x * 2 * pi / 360) * sin(y * 2 * pi / 360)
+        Z = 6378 * sin(x * 2 * pi / 360)
 
-    vert = abs(coords[0] - coords[1]) * (40075 / 360)
-    hor = abs(coords[2] - coords[3]) * (40075 / 360)
+        return array([X, Y, Z])
+    
+    top_right = coord_vector(coords[0], coords[2])
+    bottom_right = coord_vector(coords[1], coords[2])
+    top_left= coord_vector(coords[0], coords[3])
 
-    area = vert * hor
+    hor_angle = angle(top_right, top_left)
+    ver_angle = angle(top_right, bottom_right)   
+    
+    hor = hor_angle * 2 * pi / 360 * 6378
+    ver = ver_angle * 2 * pi / 360 * 6378
 
-    if area > threshold + 10:
+    area = ver * hor
+
+    if area > threshold:
         print("\n WARNING: The area you have selected may be larger than 5 km^2.\n\
 This may cause a serious increase in runtime.")
+        print("Do you wish to proceed with increased runtime? \n\
+If no, you may enter new coordinates.")
+        choice = yes_no_choice()
+        if choice == 'n':
+            print("\n")
+            coords = coords_input()
 
 
 def yes_no_choice() -> str:
@@ -86,6 +107,8 @@ def coords_input() -> list[float]:
         print("")
         coords = coords_input()
 
+    area_check(coords, 5)
+
     return coords
 
 
@@ -126,6 +149,7 @@ def step_1_input():
     print("\nFor creating intermediate manholes, the maximum allowable space between\
  these manholes is needed.\nPlease specify this distance (in meters) (example: 100)\n")
 
+
     space = manhole_space_input()
 
     print("\nThe conduit network and manhole distribution for the area you selected will \
@@ -149,41 +173,111 @@ Please enter the described information to enable the next set of calculation ste
 
     print("\nThe index of the point you want to designate as an outfall/pumping point:\n\
 (Should be a positive integer, for example: 78)\n")
-    outfalls = input("Outfall point index: ").split()
-    settings["outfalls"] = [int(x) for x in outfalls]
+    while True:
+        try:
+            outfalls = input("Outfall point index: ").split()
+            settings["outfalls"] = [int(x) for x in outfalls]
+        except ValueError:
+            print(f"The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        else:
+            break
 
     print("\n\nThe indices of the points which you want to designate as overflow points:\n\
 (Positive integers separate by space, for example: 23 65 118)\n")
-    overflows = input("Overflows points indices: ").split()
-    settings["overflows"] = [int(x) for x in overflows]
+    while True:
+        try:
+            overflows = input("Overflows points indices: ").split()      
+            settings["overflows"] = [int(x) for x in overflows]
+        except ValueError:
+            print(f"The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        else:
+            break
+            
 
     print("\n\nThe minimum depth below the ground at which conduits can be installed:\n\
 (Should be a positive integer or decimal number, for example: 1.1)\n")
-    settings["min_depth"] = float(input("Minimum installation depth [m]: "))
+    while True:
+        try:
+            settings["min_depth"] = float(input("Minimum installation depth [m]: "))
+        except ValueError:
+            print(f"The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        else:
+            break
 
     print("\n\nEnter the required minimum slope for the conduits:\n\
 (Should be a positive decimal number, for example: 0.002)\n")
-    settings["min_slope"] = float(input("Minimum slope [m/m]: "))
+    while True:
+        try:
+            settings["min_slope"] = float(input("Minimum slope [m/m]: "))
+        except ValueError:
+            print(f"The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        else:
+            break
 
     print("\n\nDo you want to enter a maximum allowable slope as well?")
+    print("\n\nMaximum slope should always be larger than the minimum slope:\n\
+(Should be a positive decimal number, for example: 0.004)")
     choice = yes_no_choice()
-
     if choice == "y":
-        print("\n\nMaximum slope should always be larger than the minimum slope\n")
-        settings["max_slope"] = float(input("Maximum slope [m/m]: "))
+        while True:
+            try: 
+                settings["max_slope"] = float(input("Maximum slope [m/m]: "))
+            except ValueError:
+                print(f"The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+                continue
+            if(settings["max_slope"] <= settings["min_slope"]):
+                print(f"The value you entered is not larger than the minimum slope. \n\
+Please try again.")
+                continue
+            else:
+                break
 
     print("\n\nEnter the peak rainfall value for the design storm:\n\
 (Should be a positive integer, for example: 23)\n")
-    settings["peak_rain"] = int(input("The peak rainfall value [mm/h]: ")) / 0.36
+
+    while True:
+        try:
+            settings["peak_rain"] = int(input("The peak rainfall value [mm/h]: ")) / 0.36
+        except ValueError:
+            print(f"The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        else:
+            break
 
     print("\n\nThe average percentage of impervious ground coverage of the area:\n\
 (Should be a positive integer number between 0 and 100, for example: 25)\n")
-    settings["perc_inp"] = int(input("Percentage of impervious ground [%]: "))
+    while True:
+        try:
+            settings["perc_inp"] = int(input("Percentage of impervious ground [%]: "))
+        except ValueError:
+            print(f"The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        else:
+            break
 
     print("\n\nA list of the available diameters of the conduits:\n\
 (Should be a series of number separated by spaces, for example: 150 300 500 1000)\n")
-    diam_list = input("List of available diameters [mm]: ").split()
-    settings["diam_list"] = [int(x) / 1000 for x in diam_list]
+    while True:
+        try:
+            diam_list = input("List of available diameters [mm]: ").split()
+            settings["diam_list"] = [int(x) / 1000 for x in diam_list]
+        except ValueError:
+            print(f"The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        else:
+            break
 
     return settings
 
@@ -199,8 +293,16 @@ you can convert it into a System Water Management Model (SWMM) file. To do this,
 please give some final specifications:")
 
     print("\n\nA timeseries will be created from your given design storm value.\n\
-Please specify the duration of this design storm in whole hours (for example: 2, max 12)\n")
-    settings["duration"] = int(input("Design storm duration [hours]: "))
+Please specify the duration of this design storm in whole hours (for example: 2, max 12)\n")   
+    while True:
+        try:
+            settings["duration"] = int(input("Design storm duration [hours]: "))
+        except ValueError:
+            print(f"The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        else:
+            break
 
     print("\n\nA name for the SWMM file. This file will be a .txt file.\n\
 The filename cannot contain any spaces or quotes (for example: test_file)\n")

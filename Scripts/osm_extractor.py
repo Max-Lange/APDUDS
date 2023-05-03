@@ -1,3 +1,4 @@
+
 """Defines the OpenStreetMap extraction and conversion functions.
 
 This script defines the functions that facilitate the downloading and reformating
@@ -35,7 +36,7 @@ def extractor(coords: list, aggregation_size=15):
 
     # Download osm data, reproject into meter-using coordinate system, consolidate nearby nodes
     osm_map = ox.graph_from_bbox(coords[0], coords[1], coords[2], coords[3], network_type="drive")
-
+    #Cf tertiary road, residential road, secondary road, service road, living street, pedestrian way, 
     osm_projected = ox.project_graph(osm_map)
     osm_consolidated = ox.consolidate_intersections(osm_projected,
                                                     tolerance=aggregation_size,

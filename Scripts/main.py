@@ -107,7 +107,6 @@ def main():
     """
 
     coords, space = step_1_input()
-    area_check(coords, 5)
     nodes, edges = step_1(coords, space)
 
     settings = step_2_input()
@@ -123,8 +122,9 @@ def tester():
     while skipping the terminal interaction stage.
     """
 
-    test_coords = [51.9291, 51.9200, 4.8381, 4.8163]
-    test_space = 120
+    # test_coords = [51.9291, 51.9200, 4.8381, 4.8163] #Grootammers
+    test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
+    test_space = 200
 
     area_check(test_coords, 5)
     nodes, edges = step_1(test_coords, test_space, block=True)
