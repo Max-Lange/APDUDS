@@ -374,8 +374,8 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
 
     for outfall in settings["outfalls"]:
         new_index = len(nodes)
-        nodes.loc[new_index] = [nodes.at[outfall, "x"] + 1,
-                                nodes.at[outfall, "y"] + 1,
+        nodes.loc[new_index] = [nodes.at[outfall, "x"] + 5,
+                                nodes.at[outfall, "y"] + 5,
                                 0,
                                 nodes.depth.max(),
                                 "outfall",
@@ -389,8 +389,8 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
 
     for overflow in settings["overflows"]:
         new_index = len(nodes)
-        nodes.loc[new_index] = [nodes.at[overflow, "x"] + 1,
-                                nodes.at[overflow, "y"] + 1,
+        nodes.loc[new_index] = [nodes.at[overflow, "x"] + 5,
+                                nodes.at[overflow, "y"] + 5,
                                 0,
                                 settings["min_depth"],
                                 "overflow",
@@ -420,7 +420,6 @@ def loop(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     nodes, edges = flow_and_depth(nodes, edges, settings)
     nodes, edges = flow_amount(nodes, edges, settings)
     edges = diameter_calc(edges, settings["diam_list"])
-
     return nodes, edges
 
 

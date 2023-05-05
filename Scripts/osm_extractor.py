@@ -22,7 +22,7 @@ import pandas as pd
 import numpy as np
 ox.config(use_cache=False)
 
-def extractor(coords: list, aggregation_size=15):
+def extractor(coords: list, key: str, aggregation_size=15):
     """Downloads the wanted road network from OpenStreetMap, and filters out the unwanted data
 
     Args:
@@ -37,25 +37,35 @@ def extractor(coords: list, aggregation_size=15):
     # Download osm data, reproject into meter-using coordinate system, consolidate nearby nodes
     cf = '["highway"~"secondary|tertiary|residential|living_street|service|pedestrian|busway"]'
     osm_map = ox.graph_from_bbox(coords[0], coords[1], coords[2], coords[3], custom_filter=cf)
+    osm_map = ox.elevation.add_node_elevations_google(osm_map, api_key=key)
+    osm_map = ox.elevation.add_edge_grades(osm_map)
 
     osm_projected = ox.project_graph(osm_map)
     osm_consolidated = ox.consolidate_intersections(osm_projected,
-                                                    tolerance=aggregation_size,
-                                                    dead_ends=True)
+                                                        tolerance=15,
+                                                        dead_ends=True)
 
     # Seperate the nodes and edges, and reset multidimensional index
     osm_nodes, osm_edges = ox.graph_to_gdfs(osm_consolidated)
+
+
     nodes_reset = osm_nodes.reset_index()
     edges_reset = osm_edges.reset_index()
+
+    #Fill NAN elevation values with average of the model. 
+    nodes_reset['elevation'].fillna(value=nodes_reset['elevation'].mean(), inplace=True)
 
     # Create new nodes and edges dataframe which only contain the desired data
     int_from = [int(edges_reset.u[i]) for i in range(len(edges_reset))]
     int_to = [int(edges_reset.v[i]) for i in range(len(edges_reset))]
+    elevation = [(nodes_reset.elevation[i]) for i in range(len(nodes_reset))]
+
     edges = pd.DataFrame({"from":int_from,
-                          "to":int_to,
-                          "length":edges_reset.length})
+                            "to":int_to,
+                            "length":edges_reset.length})
     nodes = pd.DataFrame({"x":nodes_reset.x,
-                          "y":nodes_reset.y,})
+                            "y":nodes_reset.y,
+                            "elevation":elevation})
 
     return nodes, edges
 
