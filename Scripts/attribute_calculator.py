@@ -317,6 +317,29 @@ Capped to {diam_list[-1]}")
 
     return edges
 
+def uphold_min_depth(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
+    """Move all pipes lower so that they follow the set minimum depth.
+
+    Args:
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
+        settings (dict): Network parameters
+
+    Returns:
+        tuple[DataFrame, DataFrame]: Node and conduit data with the updated node depth
+    """
+    # nodes["install_depth"] = None
+    
+    for i, node in nodes.iterrows():
+        try: 
+            nodes.at[i, "install_depth"] = float(node["depth"] + edges["diameter"][edges["from"].values == i].values.max())
+        except ValueError: #Raised if outflow or overflow node is reached
+            nodes.at[i, "install_depth"] = float(node["depth"] + edges["diameter"][edges["to"].values == i].values.max())
+            pass
+
+
+    return nodes, edges
+
 
 def cleaner_and_trimmer(nodes: pd.DataFrame, edges: pd.DataFrame):
     """Remove the columns from the node and conduit dataframes which were only needed for the
@@ -345,6 +368,7 @@ def cleaner_and_trimmer(nodes: pd.DataFrame, edges: pd.DataFrame):
     nodes.area = nodes.area.round(decimals=0)
     nodes.depth = nodes.depth.round(decimals=2)
     nodes.inflow = nodes.inflow.round(decimals=3)
+    nodes.install_depth = nodes.install_depth.round(decimals=4)
 
     # cm precision for length
     # L precision for flow
@@ -380,7 +404,8 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
                                 0,
                                 nodes.depth.max(),
                                 "outfall",
-                                0]
+                                0,
+                                nodes.at[outfall, "install_depth"]]
 
         edges.loc[len(edges)] = [outfall,
                                  new_index,
@@ -396,7 +421,8 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
                                 0,
                                 settings["min_depth"],
                                 "overflow",
-                                0]
+                                0,
+                                nodes.at[outfall, "install_depth"]]
 
         edges.loc[len(edges)] = [new_index,
                                  overflow,
@@ -422,6 +448,7 @@ def loop(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     nodes, edges = flow_and_depth(nodes, edges, settings)
     nodes, edges = flow_amount(nodes, edges, settings)
     edges = diameter_calc(edges, settings["diam_list"])
+    nodes, edges = uphold_min_depth(nodes, edges, settings)
     return nodes, edges
 
 

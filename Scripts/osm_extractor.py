@@ -54,6 +54,7 @@ def extractor(coords: list, key: str, aggregation_size=15):
 
     #Fill NAN elevation values with average of the model. 
     nodes_reset['elevation'].fillna(value=nodes_reset['elevation'].mean(), inplace=True)
+    nodes_reset['elevation'] = nodes_reset['elevation'] - nodes_reset['elevation'].min()
 
     # Create new nodes and edges dataframe which only contain the desired data
     int_from = [int(edges_reset.u[i]) for i in range(len(edges_reset))]

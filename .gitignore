@@ -3,6 +3,7 @@ APDUDS.code-workspace
 
 #Ignore SWMM output file
 test_swmm.txt
+rest_swmm.ini
 
 #Ignore random files / folders
 .ssh

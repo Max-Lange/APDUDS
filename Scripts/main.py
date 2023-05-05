@@ -27,7 +27,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
 
-def step_1(coords: list[float], space: int, key: str, block: bool = False):
+def step_1(coords: list[float], space: int, key: str, block: bool = True):
     """Preform the network creation step of the software by running the appropriate functions.
     Also display some graphs which are relevent to the results of these functions
 
@@ -113,7 +113,7 @@ def main():
     settings = step_2_input()
     nodes, edges, voro = step_2(nodes, edges, settings)
 
-    settings.update(step_3_input())
+    settings = step_3_input()
     step_3(nodes, edges, voro, settings)
 
 
@@ -123,19 +123,19 @@ def tester():
     while skipping the terminal interaction stage.
     """
 
-    # test_coords = [51.9291, 51.9200, 4.8381, 4.8163] #Grootammers
+    test_coords = [51.9291, 51.9200, 4.8381, 4.8163] #Grootammers
     # test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
-    test_coords = [47.348854, 47.33752, 7.51050, 7.47718] #Switserland
+    # test_coords = [47.348854, 47.33752, 7.51050, 7.47718] #Switserland
     test_space = 200
     api_key = loadtxt('api_key.txt', dtype=str)
 
 
     area_check(test_coords, 5)
-    nodes, edges = step_1(test_coords, test_space, api_key)
+    nodes, edges = step_1(test_coords, test_space, api_key, )
 
 
-    test_settings = {"outfalls":[8],
-                     "overflows":[0, 53],
+    test_settings = {"outfalls":[19],
+                     "overflows":[22, 59],
                      "min_depth":1.1,
                      "min_slope":1/500,
                      "peak_rain": 36,

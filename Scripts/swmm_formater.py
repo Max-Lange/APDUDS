@@ -233,8 +233,8 @@ def create_junctions(nodes: pd.DataFrame):
         if node.role == "node":
             nr_length = len(str(node_index))
             junc = "j_" + str(node_index) + (17 - 2 - nr_length) * " "
-            junc += "-" + str(node.depth) + (10 - len(str(node.depth))) * " "
-            junc += str(node.depth) + (11 - len(str(node.depth))) * " "
+            junc += "-" + str(node.install_depth) + (10 - len(str(node.install_depth))) * " "
+            junc += str(node.install_depth) + (11 - len(str(node.install_depth))) * " "
             junc += "0          0          0"
 
             junctions.append(junc)
@@ -253,7 +253,7 @@ def create_outfalls(nodes: pd.DataFrame):
     for index, node in nodes.iterrows():
         if node.role in ["outfall", "overflow"]:
             out = "j_" + str(index) + (17 - 2 - len(str(index))) * " "
-            depth = "-" + str(nodes.at[index, 'depth'])
+            depth = "-" + str(nodes.at[index, 'install_depth'])
             out += depth + (10 - len(depth)) * " "
             out += "FREE                        NO"
 
