@@ -122,16 +122,16 @@ def tester():
     while skipping the terminal interaction stage.
     """
 
-    # test_coords = [51.9291, 51.9200, 4.8381, 4.8163] #Grootammers
-    test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
+    test_coords = [51.9291, 51.9200, 4.8381, 4.8163] #Grootammers
+    # test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
     test_space = 200
 
     area_check(test_coords, 5)
     nodes, edges = step_1(test_coords, test_space, block=True)
 
 
-    test_settings = {"outfalls":[111],
-                     "overflows":[23, 65, 118],
+    test_settings = {"outfalls":[104],
+                     "overflows":[115, 62, 96],
                      "min_depth":1.1,
                      "min_slope":1/500,
                      "peak_rain": 36,
