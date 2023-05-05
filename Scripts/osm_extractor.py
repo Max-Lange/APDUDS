@@ -143,13 +143,15 @@ def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
             amount = int(np.ceil(line["length"] / max_space) - 1)
             new_length = line["length"] / (amount + 1)
 
-            # Determine the direction in which to advance the x and y coords
+            # Determine the direction in which to advance the x and y coords and determine elevation change to new node
             x_step_size = (to_node.x - from_node.x) / (amount + 1)
             y_step_size = (to_node.y - from_node.y)  / (amount + 1)
 
+            elevation_step_size = (to_node.elevation - from_node.elevation) / (amount + 1)
+
             # Special case for the first node and edge
             index_i = len(nodes)
-            nodes.loc[index_i] = [from_node.x + x_step_size, from_node.y + y_step_size]
+            nodes.loc[index_i] = [from_node.x + x_step_size, from_node.y + y_step_size, from_node.elevation + elevation_step_size]
             new_edges.loc[len(new_edges)] = [line["from"], index_i, new_length]
 
             # Add new nodes and edges for the needed nodes in the middle
@@ -157,7 +159,7 @@ def splitter(nodes: pd.DataFrame, edges: pd.DataFrame, max_space: int):
                 for i in range(2, amount+1):
                     index_i = len(nodes)
                     nodes.loc[index_i] = [from_node.x + x_step_size * i, \
-                        from_node.y + y_step_size * i]
+                        from_node.y + y_step_size * i, from_node.elevation + elevation_step_size * i]
                     new_edges.loc[len(new_edges)] = [index_i - 1, index_i, new_length]
 
             # Special case for the last edge

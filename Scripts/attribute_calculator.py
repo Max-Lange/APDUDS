@@ -376,6 +376,7 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
         new_index = len(nodes)
         nodes.loc[new_index] = [nodes.at[outfall, "x"] + 5,
                                 nodes.at[outfall, "y"] + 5,
+                                nodes.at[outfall, "elevation"],
                                 0,
                                 nodes.depth.max(),
                                 "outfall",
@@ -391,6 +392,7 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
         new_index = len(nodes)
         nodes.loc[new_index] = [nodes.at[overflow, "x"] + 5,
                                 nodes.at[overflow, "y"] + 5,
+                                nodes.at[overflow, "elevation"],
                                 0,
                                 settings["min_depth"],
                                 "overflow",

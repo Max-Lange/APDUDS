@@ -44,7 +44,6 @@ def step_1(coords: list[float], space: int, key: str, block: bool = False):
     print("\nStarting the OpenStreetMap download. This may take some time, please only close the \
 software after 5 minutes of no response....")
     nodes, edges = extractor(coords, key)
-    print(f'SO FAR GOOD')
 
     print("Completed the OpenStreetMap download, starting the data cleaning...")
     filtered_nodes, filtered_edges = cleaner(nodes, edges)
