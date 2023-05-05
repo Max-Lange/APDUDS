@@ -250,7 +250,7 @@ def reset_direction(nodes: pd.DataFrame, edges: pd.DataFrame):
 
 
 def flow_amount(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
-    """Calculate the amount of flow through each conduit
+    """Calculate the amount of flow through each conduit, and convert peak rain value to m/s.
 
     Args:
         nodes (DataFrame): The node data for a network
@@ -265,7 +265,7 @@ def flow_amount(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     nodes = nodes.copy()
     edges = edges.copy()
 
-    nodes["inflow"] = nodes["area"] * (settings["peak_rain"] / (10**7))\
+    nodes["inflow"] = nodes["area"] * (settings["peak_rain"] / (3.6e6))\
          * (settings["perc_inp"] / 100)
     edges["flow"] = 0
     edge_set = [set([edges["from"][i], edges["to"][i]]) for i in range(len(edges))]

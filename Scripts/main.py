@@ -136,7 +136,7 @@ def tester():
                      "min_slope":1/500,
                      "peak_rain": 36,
                      "perc_inp": 50,
-                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5],
+                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
                      "filename": "test_swmm",
                      "max_slope": 1/450,
                      "duration": 2,

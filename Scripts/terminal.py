@@ -246,7 +246,7 @@ Please try again.")
 
     while True:
         try:
-            settings["peak_rain"] = int(input("The peak rainfall value [mm/h]: ")) / 0.36
+            settings["peak_rain"] = int(input("The peak rainfall value [mm/h]: "))
         except ValueError:
             print(f"The value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
