@@ -123,7 +123,7 @@ def tester():
     while skipping the terminal interaction stage.
     """
 
-    test_coords = [51.9291, 51.9200, 4.8381, 4.8163] #Grootammers
+    test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
     # test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
     # test_coords = [47.348854, 47.33752, 7.51050, 7.47718] #Switserland
     test_space = 200
@@ -131,11 +131,22 @@ def tester():
 
 
     area_check(test_coords, 5)
-    nodes, edges = step_1(test_coords, test_space, api_key, )
+    nodes, edges = step_1(test_coords, test_space, api_key)
 
 
-    test_settings = {"outfalls":[19],
-                     "overflows":[22, 59],
+    # test_settings = {"outfalls":[19],
+    #                  "overflows":[22, 59],
+    #                  "min_depth":1.1,
+    #                  "min_slope":1/500,
+    #                  "peak_rain": 36,
+    #                  "perc_inp": 50,
+    #                  "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
+    #                  "filename": "test_swmm",
+    #                  "max_slope": 1/450,
+    #                  "duration": 2,
+    #                  "polygons": "n"}
+    test_settings = {"outfalls":[104],
+                     "overflows":[125, 73, 96],
                      "min_depth":1.1,
                      "min_slope":1/500,
                      "peak_rain": 36,

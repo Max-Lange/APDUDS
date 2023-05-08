@@ -89,3 +89,43 @@ git branch main
 git status
 git branch
 git switch LeafNode
+git branch
+git branch -d ConduitEasyFix
+git branch -d ConduitDepthEasyFix
+git branch -D ConduitDepthEasyFix
+git switch ConduitDepth
+git status
+git add -A
+git commit -m "first branch commit"
+git switch main
+git swtatus
+git status
+git add -A
+git commit -m "Changes to rain fall conversion"
+git branch
+git branch elevation
+git switch elevation
+git status
+git -add -A
+git add -A
+git commit -m 
+git commit -m "Importing elevation data through osmn, still buggy"
+git add -A
+git commit -m "Elevation data added to nodes"
+git push origin elevation
+git push origin ConduitDepth
+git status
+git add -A
+git commit -m "lgo
+git log
+git log
+git status
+git commit -m "Update elevation related functions and outputs"
+git push origin 
+git push origin elevation
+git status
+git status
+git add scripts/attribute_calculator.py
+git status
+git add "scripts/attribute_calculator.py"
+git status

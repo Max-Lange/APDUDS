@@ -20,6 +20,8 @@ from freud.box import Box
 from freud.locality import Voronoi
 import numpy as np
 
+
+
 def voronoi_area(nodes: pd.DataFrame):
     """Calculates the catchment area for the nodes using voronoi
 
@@ -103,7 +105,7 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     """
 
     nodes["considered"] = False
-    nodes["depth"] = settings["min_depth"]
+    nodes["depth"] = nodes["elevation"] - settings["min_depth"]
     nodes["role"] = "node"
     nodes["path"] = None
 
@@ -189,10 +191,10 @@ def set_depth(nodes: pd.DataFrame, edges: pd.DataFrame,
         from_depth = nodes.at[from_node, "depth"]
         # Use the edge set to get the conduit index
         length = edges.at[edge_set.index(set([from_node, to_node])), "length"]
-        new_to_depth = from_depth + min_slope * length
+        new_to_depth = from_depth - min_slope * length
 
         # Only update the depth if the new depth is deeper than the current depth
-        if new_to_depth > nodes.at[to_node, "depth"]:
+        if new_to_depth < nodes.at[to_node, "depth"]:
             nodes.at[to_node, "depth"] = new_to_depth
 
     return nodes
@@ -296,7 +298,7 @@ def diameter_calc(edges: pd.DataFrame, diam_list: list[float]):
     edges["diameter"] = None
 
     for i, edge in edges.iterrows():
-        precise_diam = 2 * np.sqrt(edge["flow"] / np.pi)
+        precise_diam = np.sqrt(4 * edge["flow"] / np.pi)
 
         if edge["flow"] == 0:
             edges.at[i, "diameter"] = 0
@@ -332,9 +334,9 @@ def uphold_min_depth(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     
     for i, node in nodes.iterrows():
         try: 
-            nodes.at[i, "install_depth"] = float(node["depth"] + edges["diameter"][edges["from"].values == i].values.max())
+            nodes.at[i, "install_depth"] = float(node["depth"] - edges["diameter"][edges["from"].values == i].values.max())
         except ValueError: #Raised if outflow or overflow node is reached
-            nodes.at[i, "install_depth"] = float(node["depth"] + edges["diameter"][edges["to"].values == i].values.max())
+            nodes.at[i, "install_depth"] = float(node["depth"] - edges["diameter"][edges["to"].values == i].values.max())
             pass
 
 
