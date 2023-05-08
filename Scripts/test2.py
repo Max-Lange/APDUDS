@@ -8,8 +8,7 @@ from scipy.interpolate import Rbf
 
 
 
-nodes, edges = extractor([47.348854, 47.33752, 7.51050, 7.47718], "AIzaSyDqEAD2Ds1FpEWq8G-K8-Uh25HAcHoUHgk")
-filtered_nodes, filtered_edges = cleaner(nodes, edges)
+nodes, edges = extractor([47.348854, filtered_nodes, filtered_edges = cleaner(nodes, edges)
 split_nodes, split_edges = splitter(filtered_nodes, filtered_edges, 200)
 
 mq = Rbf(split_nodes.x, split_nodes.y, split_nodes.elevation, epsilon=5)
