@@ -53,7 +53,7 @@ def extractor(coords: list, key: str, aggregation_size=15):
     edges_reset = osm_edges.reset_index()
 
     #Fill NAN elevation values with average of the model. 
-    nodes_reset['elevation'].fillna(value=nodes_reset['elevation'].mean(), inplace=True)
+    # nodes_reset['elevation'].fillna(value=nodes_reset['elevation'].mean(), inplace=True)
     nodes_reset['elevation'] = nodes_reset['elevation'] - nodes_reset['elevation'].max()
 
     # Create new nodes and edges dataframe which only contain the desired data
@@ -70,6 +70,34 @@ def extractor(coords: list, key: str, aggregation_size=15):
 
     return nodes, edges
 
+def fill_nan(nodes: pd.DataFrame, edges: pd.DataFrame):
+    """Fills the NaN elevation values for the nodes
+
+    Args:
+        nodes (pd.DataFrame): The node data for a network
+        edges (pd.DataFrame): The conduit data for a network
+
+    Returns:
+        tuple[DataFrame, DataFrame]: The node and conduit data with added nan values.
+    """
+    nodes = nodes.copy()
+    edges = edges.copy()
+    for i, _ in nodes[nodes["elevation"].isna()].iterrows():
+        lenel = 0
+        len = 0
+        for _, edge in edges[edges["from"] == i].iterrows():
+            if pd.isna(nodes.at[int(edge["to"]), "elevation"]):
+                continue
+            else:
+                lenght = edge["length"]
+                elevation  = nodes.at[int(edge["to"]), "elevation"]
+                lenel += edge["length"] * nodes.at[int(edge["to"]), "elevation"]
+            len += edge["length"]
+        nodes.at[i, "elevation"] = lenel / len
+        
+
+
+    return nodes, edges
 
 def cleaner(nodes: pd.DataFrame, edges: pd.DataFrame):
     """Standerdizes and cleans the data downloaded from OpenStreetMap by the extractor

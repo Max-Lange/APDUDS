@@ -18,7 +18,7 @@ import warnings
 from pandas import DataFrame
 from numpy import loadtxt
 from swmm_formater import swmm_file_creator
-from osm_extractor import extractor, cleaner, splitter
+from osm_extractor import extractor, fill_nan, cleaner, splitter
 from plotter import network_plotter, voronoi_plotter, height_contour_plotter, diameter_map
 from terminal import step_1_input, step_2_input, step_3_input, area_check
 from attribute_calculator import attribute_calculation
@@ -45,8 +45,13 @@ def step_1(coords: list[float], space: int, key: str, block: bool = True):
 software after 5 minutes of no response....")
     nodes, edges = extractor(coords, key)
 
-    print("Completed the OpenStreetMap download, starting the data cleaning...")
-    filtered_nodes, filtered_edges = cleaner(nodes, edges)
+    print("Completed the OpenStreetMap download, starting the data gap filling...")
+
+    elevation_nodes, elevation_edges = fill_nan(nodes, edges)
+
+    print("Completede filling the missing values, starting the data cleaning")
+
+    filtered_nodes, filtered_edges = cleaner(elevation_nodes, elevation_edges)
 
     print("Completed the data cleaning, started the conduit splitting...")
     split_nodes, split_edges = splitter(filtered_nodes, filtered_edges, space)
@@ -126,6 +131,7 @@ def tester():
     test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
     # test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
     # test_coords = [47.348854, 47.33752, 7.51050, 7.47718] #Switserland
+    # test_coords = [47.25575, 47.24906, 12.28927, 12.26838] #neukirchen
     test_space = 200
     api_key = loadtxt('api_key.txt', dtype=str)
 
@@ -133,9 +139,9 @@ def tester():
     area_check(test_coords, 5)
     nodes, edges = step_1(test_coords, test_space, api_key)
 
-
-    # test_settings = {"outfalls":[19],
-    #                  "overflows":[22, 59],
+    # #Neukirchen
+    # test_settings = {"outfalls":[67],
+    #                  "overflows":[75],
     #                  "min_depth":1.1,
     #                  "min_slope":1/500,
     #                  "peak_rain": 36,
@@ -145,7 +151,8 @@ def tester():
     #                  "max_slope": 1/450,
     #                  "duration": 2,
     #                  "polygons": "n"}
-    test_settings = {"outfalls":[104],
+    # Groot Ammers
+    test_settings = {"outfalls":[108],
                      "overflows":[125, 73, 96],
                      "min_depth":1.1,
                      "min_slope":1/500,

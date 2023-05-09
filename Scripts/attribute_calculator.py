@@ -119,7 +119,11 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     graph.add_nodes_from(list(nodes.index.values))
 
     for _, edge in edges.iterrows():
-        graph.add_edge(edge["from"], edge["to"], weight=edge["length"])
+        slope = (nodes.at[int(edge["from"]), "elevation"] - nodes.at[int(edge["to"]), "elevation"])  / edge["length"]
+        if  slope >= 0:
+             graph.add_edge(edge["from"], edge["to"], weight = 1 * abs(slope) * edge["length"])
+        else:
+            graph.add_edge(edge["from"], edge["to"], weight = 10 * abs(slope) * edge["length"] )
 
     return nodes, edges, graph
 

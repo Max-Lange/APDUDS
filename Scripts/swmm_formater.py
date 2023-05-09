@@ -235,7 +235,7 @@ def create_junctions(nodes: pd.DataFrame):
             nr_length = len(str(node_index))
             junc = "j_" + str(node_index) + (17 - 2 - nr_length) * " "
             junc += "-" + str(abs(node.install_depth)) + (10 - len(str(abs(node.install_depth)))) * " "
-            junc += str(abs(node.install_depth)) + (11 - len(str(abs(node.install_depth)))) * " "
+            junc += str(abs(node.install_depth - node.elevation)) + (11 - len(str(abs(node.install_depth - node.elevation)))) * " "
             junc += "0          0          0"
 
             junctions.append(junc)
