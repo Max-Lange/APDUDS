@@ -130,7 +130,7 @@ def tester():
     nodes, edges = step_1(test_coords, test_space, block=True)
 
 
-    test_settings = {"outfalls":[111],
+    test_settings = {"outfalls":[108],
                      "overflows":[23, 65, 118],
                      "min_depth":1.1,
                      "min_slope":1/500,

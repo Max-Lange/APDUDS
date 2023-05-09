@@ -10,6 +10,7 @@ test_swmm.txt
 .gitconfig
 .lesshst
 test.py
+api_key.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
