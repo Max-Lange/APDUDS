@@ -129,3 +129,7 @@ git add scripts/attribute_calculator.py
 git status
 git add "scripts/attribute_calculator.py"
 git status
+git status
+git add -A
+git commit -m "intermediate update to elevation"
+git push origin elevation
