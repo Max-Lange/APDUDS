@@ -153,7 +153,7 @@ def tester():
     #                  "polygons": "n"}
     # Groot Ammers
     test_settings = {"outfalls":[108],
-                     "overflows":[125, 73, 96],
+                     "overflows":[92],
                      "min_depth":1.1,
                      "min_slope":1/500,
                      "peak_rain": 36,
