@@ -130,13 +130,13 @@ def tester():
     nodes, edges = step_1(test_coords, test_space, block=True)
 
 
-    test_settings = {"outfalls":[108],
-                     "overflows":[23, 65, 118],
+    test_settings = {"outfalls":[104],
+                     "overflows":[115, 62, 96],
                      "min_depth":1.1,
                      "min_slope":1/500,
                      "peak_rain": 36,
                      "perc_inp": 50,
-                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5],
+                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
                      "filename": "test_swmm",
                      "max_slope": 1/450,
                      "duration": 2,
