@@ -89,3 +89,36 @@ git branch main
 git status
 git branch
 git switch LeafNode
+git status
+git status
+git status
+git add -A 
+git commit -m "Area adjusted based on elevation implemented"
+git status
+git add -A
+git commit -m "changed contour plot to show actual conduit depth below ground level"
+git push origin elevation
+git list
+git push origin elevation
+git pull origin elevation
+git status
+git add .gitconfig.txt
+git status
+git commit -m "done"
+git config --global user.email "jipsteiger95@gmail.com"
+git config --global user.name "Jip Steiger"
+git status
+git status
+git stas
+git status
+git add -A
+git commit -m "deleted unneccesary files"
+git push origin elevation
+git status
+git add -A
+git commit -m "updated requirement txt"
+git push origin elevation
+git switch main
+git branch
+git merge ConduitDepth
+git merge ConduitDepth
