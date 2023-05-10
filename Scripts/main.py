@@ -16,8 +16,9 @@ This file contains the following functions:
 
 import warnings
 from pandas import DataFrame
+from numpy import loadtxt
 from swmm_formater import swmm_file_creator
-from osm_extractor import extractor, cleaner, splitter
+from osm_extractor import extractor, fill_nan, cleaner, splitter
 from plotter import network_plotter, voronoi_plotter, height_contour_plotter, diameter_map
 from terminal import step_1_input, step_2_input, step_3_input, area_check
 from attribute_calculator import attribute_calculation
@@ -26,7 +27,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
 
-def step_1(coords: list[float], space: int, block: bool = False):
+def step_1(coords: list[float], space: int, key: str, block: bool = True):
     """Preform the network creation step of the software by running the appropriate functions.
     Also display some graphs which are relevent to the results of these functions
 
@@ -42,10 +43,15 @@ def step_1(coords: list[float], space: int, block: bool = False):
 
     print("\nStarting the OpenStreetMap download. This may take some time, please only close the \
 software after 5 minutes of no response....")
-    nodes, edges = extractor(coords)
+    nodes, edges = extractor(coords, key)
 
-    print("Completed the OpenStreetMap download, starting the data cleaning...")
-    filtered_nodes, filtered_edges = cleaner(nodes, edges)
+    print("Completed the OpenStreetMap download, starting the data gap filling...")
+
+    elevation_nodes, elevation_edges = fill_nan(nodes, edges)
+
+    print("Completede filling the missing values, starting the data cleaning")
+
+    filtered_nodes, filtered_edges = cleaner(elevation_nodes, elevation_edges)
 
     print("Completed the data cleaning, started the conduit splitting...")
     split_nodes, split_edges = splitter(filtered_nodes, filtered_edges, space)
@@ -106,13 +112,13 @@ def main():
     Run this function if you want to use the software in the intended way
     """
 
-    coords, space = step_1_input()
-    nodes, edges = step_1(coords, space)
+    coords, space, api_key = step_1_input()
+    nodes, edges = step_1(coords, space, api_key)
 
     settings = step_2_input()
     nodes, edges, voro = step_2(nodes, edges, settings)
 
-    settings.update(step_3_input())
+    settings = step_3_input()
     step_3(nodes, edges, voro, settings)
 
 
@@ -122,16 +128,32 @@ def tester():
     while skipping the terminal interaction stage.
     """
 
-    test_coords = [51.9291, 51.9200, 4.8381, 4.8163] #Grootammers
+    test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
     # test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
+    # test_coords = [47.348854, 47.33752, 7.51050, 7.47718] #Switserland
+    # test_coords = [47.25575, 47.24906, 12.28927, 12.26838] #neukirchen
     test_space = 200
+    api_key = loadtxt('api_key.txt', dtype=str)
+
 
     area_check(test_coords, 5)
-    nodes, edges = step_1(test_coords, test_space, block=True)
+    nodes, edges = step_1(test_coords, test_space, api_key)
 
-
+    # #Neukirchen
+    # test_settings = {"outfalls":[67],
+    #                  "overflows":[75],
+    #                  "min_depth":1.1,
+    #                  "min_slope":1/500,
+    #                  "peak_rain": 36,
+    #                  "perc_inp": 50,
+    #                  "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
+    #                  "filename": "test_swmm",
+    #                  "max_slope": 1/450,
+    #                  "duration": 2,
+    #                  "polygons": "n"}
+    # Groot Ammers
     test_settings = {"outfalls":[108],
-                     "overflows":[92],
+                     "overflows":[125, 73, 96],
                      "min_depth":1.1,
                      "min_slope":1/500,
                      "peak_rain": 36,

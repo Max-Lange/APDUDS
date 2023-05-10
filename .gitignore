@@ -3,6 +3,7 @@ APDUDS.code-workspace
 
 #Ignore SWMM output file
 test_swmm.txt
+rest_swmm.ini
 
 #Ignore random files / folders
 .ssh
@@ -10,6 +11,12 @@ test_swmm.txt
 .gitconfig
 .lesshst
 test.py
+api_key.txt
+*.bash_history
+
+
+
+#Ignore private API key
 api_key.txt
 
 # Byte-compiled / optimized / DLL files

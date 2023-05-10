@@ -20,7 +20,9 @@ from freud.box import Box
 from freud.locality import Voronoi
 import numpy as np
 
-def voronoi_area(nodes: pd.DataFrame):
+
+
+def voronoi_area(nodes: pd.DataFrame, edges: pd.DataFrame):
     """Calculates the catchment area for the nodes using voronoi
 
     Args:
@@ -103,7 +105,7 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     """
 
     nodes["considered"] = False
-    nodes["depth"] = settings["min_depth"]
+    nodes["depth"] = nodes["elevation"] - settings["min_depth"]
     nodes["role"] = "node"
     nodes["path"] = None
 
@@ -117,7 +119,11 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     graph.add_nodes_from(list(nodes.index.values))
 
     for _, edge in edges.iterrows():
-        graph.add_edge(edge["from"], edge["to"], weight=edge["length"])
+        slope = (nodes.at[int(edge["from"]), "elevation"] - nodes.at[int(edge["to"]), "elevation"])  / edge["length"]
+        if  slope >= 0:
+             graph.add_edge(edge["from"], edge["to"], weight = 1 * abs(slope) * edge["length"])
+        else:
+            graph.add_edge(edge["from"], edge["to"], weight = 10 * abs(slope) * edge["length"] )
 
     return nodes, edges, graph
 
@@ -189,10 +195,10 @@ def set_depth(nodes: pd.DataFrame, edges: pd.DataFrame,
         from_depth = nodes.at[from_node, "depth"]
         # Use the edge set to get the conduit index
         length = edges.at[edge_set.index(set([from_node, to_node])), "length"]
-        new_to_depth = from_depth + min_slope * length
+        new_to_depth = from_depth - min_slope * length
 
         # Only update the depth if the new depth is deeper than the current depth
-        if new_to_depth > nodes.at[to_node, "depth"]:
+        if new_to_depth < nodes.at[to_node, "depth"]:
             nodes.at[to_node, "depth"] = new_to_depth
 
     return nodes
@@ -217,13 +223,10 @@ def uphold_max_slope(nodes: pd.DataFrame, edges: pd.DataFrame,\
         path = node.path
 
         for i in range(len(path)-1):
-            # Move backwards through the list as the depth can only become greater
             lower_node = path[-1-i]
             higher_node = path[-2-i]
-            # Use the edge set to get the conduit index
             length = edges.at[edge_set.index(set([lower_node, higher_node])), "length"]
 
-            # Only update the depth if the current slope is greater than the max slope
             if abs(nodes.at[lower_node, "depth"] - nodes.at[higher_node, "depth"])\
                  / length > max_slope:
                 nodes.at[higher_node, "depth"] = nodes.at[lower_node, "depth"] - length * max_slope
@@ -247,6 +250,46 @@ def reset_direction(nodes: pd.DataFrame, edges: pd.DataFrame):
             edges.at[i, "from"], edges.at[i, "to"] = edge["to"], edge["from"]
 
     return edges
+
+def adjusted_area(nodes: pd.DataFrame, edges: pd.DataFrame):
+    """Re-calculate the areas of all nodes based on elevation of nearby nodes.
+
+    Args:
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
+        settings (dict): Network parameters
+
+    Returns:
+        tuple[DataFrame, DataFrame]: Node and conduit data with the adjusted area
+    """
+
+    for i, _ in nodes.iterrows():
+        length_elevation_above, length_above, length_elevation_below, length_below = 0, 0, 0, 0 
+        for _, edge in edges[edges["from"] == i].iterrows():
+            length = edge["length"]
+            elevation  = nodes.at[int(edge["to"]), "elevation"]
+            if elevation - nodes.at[i, "elevation"] > 0:
+                length_elevation_above += length * elevation
+                length_above += length
+            else: 
+                length_elevation_below += length * elevation
+                length_below += length
+        try:
+            area_up = length_elevation_above / length_above
+        except ZeroDivisionError:
+            area_up = 0
+        try:
+            area_down = length_elevation_below / length_below
+        except ZeroDivisionError:
+            area_down = 0
+
+        if nodes.at[i, "elevation"] != 0:
+            factor = (np.exp((area_up - area_down) / nodes.at[i, "elevation"]))**0.25
+        else:
+            factor = (np.exp((area_up - area_down) / elevation))**0.25
+        nodes.at[i, "area"] = nodes.at[i, "area"] * factor
+
+    return nodes, edges
 
 
 def flow_amount(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
@@ -296,7 +339,7 @@ def diameter_calc(edges: pd.DataFrame, diam_list: list[float]):
     edges["diameter"] = None
 
     for i, edge in edges.iterrows():
-        precise_diam = 2 * np.sqrt(edge["flow"] / np.pi)
+        precise_diam = np.sqrt(4 * edge["flow"] / np.pi)
 
         if edge["flow"] == 0:
             edges.at[i, "diameter"] = 0
@@ -316,6 +359,27 @@ Capped to {diam_list[-1]}")
                     break
 
     return edges
+
+def uphold_min_depth(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
+    """Move all pipes lower so that they follow the set minimum depth.
+
+    Args:
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
+        settings (dict): Network parameters
+
+    Returns:
+        tuple[DataFrame, DataFrame]: Node and conduit data with the updated node depth
+    """
+    
+    for i, node in nodes.iterrows():
+        try: 
+            nodes.at[i, "install_depth"] = float(node["depth"] - edges["diameter"][edges["from"].values == i].values.max())
+        except ValueError: #Raised if outflow or overflow node is reached
+            nodes.at[i, "install_depth"] = float(node["depth"] - edges["diameter"][edges["to"].values == i].values.max())
+            pass
+
+    return nodes, edges
 
 
 def cleaner_and_trimmer(nodes: pd.DataFrame, edges: pd.DataFrame):
@@ -345,6 +409,7 @@ def cleaner_and_trimmer(nodes: pd.DataFrame, edges: pd.DataFrame):
     nodes.area = nodes.area.round(decimals=0)
     nodes.depth = nodes.depth.round(decimals=2)
     nodes.inflow = nodes.inflow.round(decimals=3)
+    nodes.install_depth = nodes.install_depth.round(decimals=4)
 
     # cm precision for length
     # L precision for flow
@@ -374,12 +439,14 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
 
     for outfall in settings["outfalls"]:
         new_index = len(nodes)
-        nodes.loc[new_index] = [nodes.at[outfall, "x"] + 1,
-                                nodes.at[outfall, "y"] + 1,
+        nodes.loc[new_index] = [nodes.at[outfall, "x"] + 5,
+                                nodes.at[outfall, "y"] + 5,
+                                nodes.at[outfall, "elevation"],
                                 0,
                                 nodes.depth.max(),
                                 "outfall",
-                                0]
+                                0,
+                                nodes.at[outfall, "install_depth"]]
 
         edges.loc[len(edges)] = [outfall,
                                  new_index,
@@ -389,12 +456,14 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
 
     for overflow in settings["overflows"]:
         new_index = len(nodes)
-        nodes.loc[new_index] = [nodes.at[overflow, "x"] + 1,
-                                nodes.at[overflow, "y"] + 1,
+        nodes.loc[new_index] = [nodes.at[overflow, "x"] + 5,
+                                nodes.at[overflow, "y"] + 5,
+                                nodes.at[overflow, "elevation"],
                                 0,
                                 settings["min_depth"],
                                 "overflow",
-                                0]
+                                0,
+                                nodes.at[outfall, "install_depth"]]
 
         edges.loc[len(edges)] = [new_index,
                                  overflow,
@@ -405,7 +474,7 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     return nodes, edges
 
 
-def loop(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
+def loop(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict, type: str):
     """Runs the main attibute calculations loop for a given network
 
     Args:
@@ -418,9 +487,11 @@ def loop(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     """
 
     nodes, edges = flow_and_depth(nodes, edges, settings)
+    if type == "outfall":
+        nodes, edges = adjusted_area(nodes, edges)
     nodes, edges = flow_amount(nodes, edges, settings)
     edges = diameter_calc(edges, settings["diam_list"])
-
+    nodes, edges = uphold_min_depth(nodes, edges, settings)
     return nodes, edges
 
 
@@ -436,18 +507,18 @@ def attribute_calculation(nodes: pd.DataFrame, edges: pd.DataFrame, settings: di
         tuple[DataFrame, DataFrame]: The node and conduit data with newly added and updated
         attribute values
     """
-    nodes, voro = voronoi_area(nodes)
+    nodes, voro = voronoi_area(nodes, nodes)
 
     nodes_copy = nodes.copy()
     edges_copy = edges.copy()
 
-    nodes, edges = loop(nodes, edges, settings)
+    nodes, edges = loop(nodes, edges, settings, "outfall")
     print("Main attribute calculations completed, moving on to overflow diameter calculations...")
 
     loop_setting = settings.copy()
     for overflow in settings["overflows"]:
         loop_setting["outfalls"] = [overflow]
-        _, loop_edges = loop(nodes_copy, edges_copy, loop_setting)
+        _, loop_edges = loop(nodes_copy, edges_copy, loop_setting, "overflow")
 
         for i in range(len(edges)):
             if edges.at[i, "diameter"] < loop_edges.at[i, "diameter"]:

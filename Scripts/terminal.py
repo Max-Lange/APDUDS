@@ -146,8 +146,18 @@ def step_1_input():
 
     coords = coords_input()
 
-    print("\nFor creating intermediate manholes, the maximum allowable space between\
- these manholes is needed.\nPlease specify this distance (in meters) (example: 100)\n")
+    print(f"In order for the system to use the google elevation API, an API key has to be given, please do so below. \n\
+An API key can be generated from https://tinyurl.com/elevationapi")
+    
+    while True:
+        try:
+            api_key = input("API key: ")
+
+        except ValueError:
+            print(f"The value you entered is incorrect, please try again.")
+            continue    
+        else:
+            break
 
 
     space = manhole_space_input()
@@ -155,7 +165,7 @@ def step_1_input():
     print("\nThe conduit network and manhole distribution for the area you selected will \
 now be calculated.\nA figure will appear, after which you can proceed to the next step.")
 
-    return coords, space
+    return coords, space, api_key
 
 
 def step_2_input():

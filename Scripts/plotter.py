@@ -107,7 +107,7 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
     # Add the colored contours
     x_coords = nodes.x[(nodes.role == "node") | (nodes.role == "outfall")]
     y_coords = nodes.y[(nodes.role == "node") | (nodes.role == "outfall")]
-    depths = nodes.depth[(nodes.role == "node") | (nodes.role == "outfall")]
+    depths = nodes.install_depth[(nodes.role == "node") | (nodes.role == "outfall")] - nodes.elevation[(nodes.role == "node") | (nodes.role == "outfall")]
     contourf = axes.tricontourf(x_coords, y_coords, depths)
 
     # Add extra points on the end to get a larger graph extent
