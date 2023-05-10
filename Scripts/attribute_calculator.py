@@ -252,7 +252,6 @@ def reset_direction(nodes: pd.DataFrame, edges: pd.DataFrame):
     return edges
 
 def adjusted_area(nodes: pd.DataFrame, edges: pd.DataFrame):
-    print(nodes["area"].sum())
     """Re-calculate the areas of all nodes based on elevation of nearby nodes.
 
     Args:
@@ -263,6 +262,7 @@ def adjusted_area(nodes: pd.DataFrame, edges: pd.DataFrame):
     Returns:
         tuple[DataFrame, DataFrame]: Node and conduit data with the adjusted area
     """
+
     for i, _ in nodes.iterrows():
         length_elevation_above, length_above, length_elevation_below, length_below = 0, 0, 0, 0 
         for _, edge in edges[edges["from"] == i].iterrows():
@@ -286,10 +286,9 @@ def adjusted_area(nodes: pd.DataFrame, edges: pd.DataFrame):
         if nodes.at[i, "elevation"] != 0:
             factor = (np.exp((area_up - area_down) / nodes.at[i, "elevation"]))**0.25
         else:
-            factor = np.exp((area_up - area_down) / elevation)
-        nodes.at[i, "area"] = nodes.at[i, "area"] * (factor ** 1)
+            factor = (np.exp((area_up - area_down) / elevation))**0.25
+        nodes.at[i, "area"] = nodes.at[i, "area"] * factor
 
-    print(nodes["area"].sum())
     return nodes, edges
 
 
