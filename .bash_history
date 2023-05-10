@@ -133,3 +133,17 @@ git status
 git add -A
 git commit -m "intermediate update to elevation"
 git push origin elevation
+git status
+git status
+git add -A
+git commit -m "clean up"
+git switch main
+git add -A
+git commit -m "elevation nan values fixed and pathing updated"
+git switch main
+git switch elevation
+git status
+git status
+git add -A
+git commit -m "minor update"
+git switch elevation

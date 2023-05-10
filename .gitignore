@@ -11,6 +11,8 @@ rest_swmm.ini
 .gitconfig
 .lesshst
 test.py
+*.bash_history
+
 
 
 #Ignore private API key

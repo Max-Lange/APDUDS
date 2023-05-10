@@ -83,17 +83,15 @@ def fill_nan(nodes: pd.DataFrame, edges: pd.DataFrame):
     nodes = nodes.copy()
     edges = edges.copy()
     for i, _ in nodes[nodes["elevation"].isna()].iterrows():
-        lenel = 0
-        len = 0
+        length_elevation = 0
+        length = 0
         for _, edge in edges[edges["from"] == i].iterrows():
             if pd.isna(nodes.at[int(edge["to"]), "elevation"]):
                 continue
             else:
-                lenght = edge["length"]
-                elevation  = nodes.at[int(edge["to"]), "elevation"]
-                lenel += edge["length"] * nodes.at[int(edge["to"]), "elevation"]
-            len += edge["length"]
-        nodes.at[i, "elevation"] = lenel / len
+                length_elevation += edge["length"] * nodes.at[int(edge["to"]), "elevation"]
+            length += edge["length"]
+        nodes.at[i, "elevation"] = length_elevation / length
         
 
 
