@@ -27,13 +27,12 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
 
-def step_1(coords: list[float], space: int, key: str, block: bool = True):
+def step_1(coords: list[float], key: str, block: bool = True):
     """Preform the network creation step of the software by running the appropriate functions.
     Also display some graphs which are relevent to the results of these functions
 
     Args:
         coords (list[float]): The north, south, east and west coordinates of the desired area
-        space (int): The maximum allowable manhole spacing
         block (bool, optional): Decides wether displaying the graph pauses the run.
         Defaults to False.
 
@@ -45,7 +44,7 @@ def step_1(coords: list[float], space: int, key: str, block: bool = True):
 software after 5 minutes of no response....")
     nodes, edges = extractor(coords, key)
 
-    print("Completed the OpenStreetMap download, starting the data gap filling...")
+    print("Completed the OpenStreetMap download, interpolating several missing elevation values...")
 
     elevation_nodes, elevation_edges = fill_nan(nodes, edges)
 
@@ -53,15 +52,16 @@ software after 5 minutes of no response....")
 
     filtered_nodes, filtered_edges = cleaner(elevation_nodes, elevation_edges)
 
-    print("Completed the data cleaning, started the conduit splitting...")
-    split_nodes, split_edges = splitter(filtered_nodes, filtered_edges, space)
-
-    print("Completed the conduit splitting, plotting graphs...")
+    print("Completed the data cleaning, plotting graphs...")
     _ = plt.figure()
-    network_plotter(split_nodes, split_edges, 111, numbered=True)
+    network_plotter(filtered_nodes, filtered_edges, 111, numbered=True)
     plt.show(block=block)
 
-    return split_nodes, split_edges
+    return filtered_nodes, filtered_edges
+
+def variation(settings: dict):
+
+    return settings
 
 
 def step_2(nodes: DataFrame, edges: DataFrame, settings: dict, block: bool = False):
@@ -112,13 +112,22 @@ def main():
     Run this function if you want to use the software in the intended way
     """
 
-    coords, space, api_key = step_1_input()
-    nodes, edges = step_1(coords, space, api_key)
+    coords, api_key = step_1_input()
+    nodes, edges = step_1(coords, api_key)
+
 
     settings = step_2_input()
-    nodes, edges, voro = step_2(nodes, edges, settings)
 
-    settings = step_3_input()
+    nodes, edges = splitter(nodes, edges, settings["spacing"])
+
+    if "variants" in settings:
+        settings = variation(settings)
+        nodes, edges, voro = step_2(nodes, edges, settings)
+
+    else:
+        nodes, edges, voro = step_2(nodes, edges, settings)
+
+    settings = step_3_input(settings)
     step_3(nodes, edges, voro, settings)
 
 
@@ -129,31 +138,17 @@ def tester():
     """
 
     test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
-    # test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
-    # test_coords = [47.348854, 47.33752, 7.51050, 7.47718] #Switserland
-    # test_coords = [47.25575, 47.24906, 12.28927, 12.26838] #neukirchen
-    test_space = 200
+
     api_key = loadtxt('api_key.txt', dtype=str)
 
 
     area_check(test_coords, 5)
-    nodes, edges = step_1(test_coords, test_space, api_key)
+    nodes, edges = step_1(test_coords, api_key)
 
-    # #Neukirchen
-    # test_settings = {"outfalls":[67],
-    #                  "overflows":[75],
-    #                  "min_depth":1.1,
-    #                  "min_slope":1/500,
-    #                  "peak_rain": 36,
-    #                  "perc_inp": 50,
-    #                  "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
-    #                  "filename": "test_swmm",
-    #                  "max_slope": 1/450,
-    #                  "duration": 2,
-    #                  "polygons": "n"}
     # Groot Ammers
-    test_settings = {"outfalls":[108],
-                     "overflows":[92],
+    test_settings = {"spacing": 100,
+                     "outfalls":[108],
+                     "overflows":[92, 30],
                      "min_depth":1.1,
                      "min_slope":1/500,
                      "peak_rain": 36,
@@ -163,6 +158,8 @@ def tester():
                      "max_slope": 1/450,
                      "duration": 2,
                      "polygons": "n"}
+    
+    nodes, edges = splitter(nodes, edges, test_settings["spacing"])
 
     nodes, edges, voro = step_2(nodes, edges, test_settings, block=True)
 
@@ -170,4 +167,4 @@ def tester():
 
 
 if __name__ == "__main__":
-    tester()
+    main()
