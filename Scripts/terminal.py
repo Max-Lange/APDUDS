@@ -544,6 +544,31 @@ Please try again")
 
     return settings
 
+def uncertain_choice(variants: dict):
+
+    print("\nPlease pick your preferred variant number: \n\
+(For example: 1)")
+    while True:
+        try:
+            number = int(input("\n Favourite design: "))
+            nodes = variants[f"nodes_{number}"]
+            edges = variants[f"edges_{number}"]
+            voro = variants[f"voronoi_area_{number}"]
+            settings = variants[f"variant_{number}"]
+
+        except ValueError:
+            print(f"\n The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        except KeyError:
+            print("The design variant number you gave does not exist. \n\
+Please try again")
+            continue
+        else:
+            break
+
+    return nodes, edges, voro
+
 def settings_uncertainty(settings: dict):
     print("\nYou may now enter the to be varied in values for \n\
 the peak rainfall and percentage impervious ground")

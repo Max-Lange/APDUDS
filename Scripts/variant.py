@@ -17,7 +17,7 @@ from numpy import random as rnd
 import matplotlib.pyplot as plt
 from pandas import DataFrame
 from attribute_calculator import attribute_calculation 
-from terminal import design_choice, settings_uncertainty
+from terminal import design_choice, uncertain_choice, settings_uncertainty
 from osm_extractor import splitter
 from plotter import voronoi_plotter, height_contour_plotter, diameter_map
 
@@ -36,18 +36,19 @@ def multiple_variant(nodes: DataFrame, edges: DataFrame, settings: dict, block: 
     """
     
     rnd.seed(1)
-    variants = {}
+    variants_design = {}
     for j in range(settings["variants"]):
-        variants[f"variant_{j + 1}"] = variation_design(settings)
-        nodes, edges = splitter(nodes, edges, variants[f"variant_{j + 1}"]["spacing"])
+        variants_design[f"variant_{j + 1}"] = variation_design(settings)
+        nodes, edges = splitter(nodes, edges, variants_design[f"variant_{j + 1}"]["spacing"])
         print(f"\nStarting the attribute calculation step for variant {j + 1}...")
-        nodes_variant, edges_variant, voro_variant = attribute_calculation(nodes, edges, variants[f"variant_{j + 1}"])
+        variants_design[f"nodes_{j +1 }"], variants_design[f"edges_{j + 1}"], variants_design[f"voronoi_area_{j + 1}"] \
+            = attribute_calculation(nodes, edges, variants_design[f"variant_{j + 1}"])
         print(f"Completed the attribute calculations for variant {j + 1}, plotting graphs...")
 
         fig = plt.figure()
-        voronoi_plotter(nodes_variant, voro_variant, 221)
-        height_contour_plotter(nodes_variant, edges_variant, 222, fig)
-        diameter_map(nodes_variant, edges_variant, 223)
+        voronoi_plotter(variants_design[f"nodes_{j + 1}"], variants_design[f"voronoi_area_{j + 1}"], 221)
+        height_contour_plotter(variants_design[f"nodes_{j + 1}"], variants_design[f"edges_{j + 1}"], 222, fig)
+        diameter_map(variants_design[f"nodes_{j + 1}"], variants_design[f"edges_{j + 1}"], 223)
         fig.suptitle(f"Design {j + 1}")
         fig.tight_layout()
         
@@ -55,22 +56,23 @@ def multiple_variant(nodes: DataFrame, edges: DataFrame, settings: dict, block: 
 of the design once all figures are closed.")
     plt.show(block=block)
 
-    settings_design = design_choice(variants)
+    settings_design = design_choice(variants_design)
 
     settings = settings_uncertainty(settings_design)
 
-    variants = {}
+    variants_uncertain = {}
     for j in range(settings["variants"]):
-        variants[f"variant_{j + 1}"] = variation_uncertainty(settings)
-        nodes, edges = splitter(nodes, edges, variants[f"variant_{j + 1}"]["spacing"])
+        variants_uncertain[f"variant_{j + 1}"] = variation_uncertainty(settings)
+        nodes, edges = splitter(nodes, edges, variants_uncertain[f"variant_{j + 1}"]["spacing"])
 
-        print(f"\nAdjusting pipe diameter for design {j + 1}..")
-        nodes_variant, edges_variant, voro_variant = attribute_calculation(nodes, edges, variants[f"variant_{j + 1}"])    
+        print(f"\nAdjusting pipe diameter for uncertainties in rainfall and percentage impervious ground, design {j + 1}..")
+        variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], variants_uncertain[f"voronoi_area_{j + 1}"] \
+            = attribute_calculation(nodes, edges, variants_uncertain[f"variant_{j + 1}"])    
 
         fig = plt.figure()
-        voronoi_plotter(nodes_variant, voro_variant, 221)
-        height_contour_plotter(nodes_variant, edges_variant, 222, fig)
-        diameter_map(nodes_variant, edges_variant, 223)
+        voronoi_plotter(variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"voronoi_area_{j + 1}"], 221)
+        height_contour_plotter( variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], 222, fig)
+        diameter_map(variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], 223)
         fig.suptitle(f"Design {j + 1}")
         fig.tight_layout()
     print("\nDiameter calculations finished for all variants.")
@@ -79,9 +81,7 @@ of the design once all figures are closed.")
 of the design once all figures are closed.")
     plt.show(block=block)
 
-    settings_uncertainty = design_choice(variants)
-
-    nodes, edges, voro = attribute_calculation(nodes, edges, settings_uncertainty)
+    nodes, edges, voro = uncertain_choice(variants_uncertain)
 
     return nodes, edges, voro
 
