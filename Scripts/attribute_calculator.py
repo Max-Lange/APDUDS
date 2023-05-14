@@ -19,8 +19,52 @@ import pandas as pd
 from freud.box import Box
 from freud.locality import Voronoi
 import numpy as np
+from numpy import random as rnd
+
+def variation_design(settings: dict):
+    random_settings = {}
+    random_settings["variants"] = settings["variants"]
+    random_settings["spacing"] = rnd.choice(settings["spacing"], 1)[0]
+    random_settings["outfalls"] = rnd.choice(settings["outfalls"], 1)
 
 
+    random_settings["overflows"] = rnd.choice(settings["overflows"], rnd.random_integers(1, 2), replace=True)
+    random_settings["min_depth"] = rnd.choice(settings["min_depth"], 1)[0]
+    random_settings["min_slope"] = rnd.choice(settings["min_slope"], 1)[0]
+
+    random_settings["peak_rain"] = settings["peak_rain"]
+    random_settings["perc_inp"] = settings["perc_inp"]
+
+    # random_settings["diam_list"] = rnd.choice(settings["diam_list"], 5, replace=True)
+    random_settings["diam_list"] = settings["diam_list"]
+
+    while True:
+        random_settings["max_slope"] = rnd.choice(settings["max_slope"], 1)[0]
+        if random_settings["max_slope"] > random_settings["min_slope"]:
+            break
+        else:
+            continue
+
+    return random_settings
+
+
+def variation_uncertainty(settings: dict):
+    random_settings = {}
+
+    random_settings["variants"] = settings["variants"]
+    random_settings["spacing"] = settings["spacing"]
+    random_settings["outfalls"] = settings["outfalls"]
+    random_settings["overflows"] = settings["overflows"]
+    random_settings["min_depth"] = settings["min_depth"]
+    random_settings["min_slope"] = settings["min_slope"]
+
+    random_settings["peak_rain"] = rnd.choice(settings["peak_rain"], 1)[0]
+    random_settings["perc_inp"] = rnd.choice(settings["perc_inp"], 1)[0]
+
+    random_settings["diam_list"] = settings["diam_list"]
+    random_settings["max_slope"] = settings["max_slope"]
+
+    return random_settings
 
 def voronoi_area(nodes: pd.DataFrame, edges: pd.DataFrame):
     """Calculates the catchment area for the nodes using voronoi

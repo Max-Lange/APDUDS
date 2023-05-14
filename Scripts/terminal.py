@@ -53,6 +53,7 @@ If no, you may enter new coordinates.")
             coords = coords_input()
 
 
+
 def yes_no_choice() -> str:
     """Presents the user with a yes no choice input line
 
@@ -521,6 +522,55 @@ the 'all files' option in the folder explorer to be able to see the file in the 
 
     print("\nThis concludes this use session of APDUDS, \
 the software will close once the file has been created.")
+
+    return settings
+
+def design_choice(variants: dict):
+
+    print("Please pick your preferred variant number: \n\
+              (For example: 1)")
+    while True:
+        try:
+            number = int(input("\n Favourite design: "))
+        except ValueError:
+            print(f"\n The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        else:
+            break
+
+    settings = variants[f"variant_{number}"]
+
+    return settings
+
+def settings_uncertainty(settings: dict):
+    print("You may now enter the to be varied in values for \n\
+          the peak rainfall and percentage impervious ground")
+    print("\n The value for the peak rainfall you would like to vary in:\n\
+(Positive integers separate by space, for example: 23 65 118)")
+    while True:
+        try:
+            rain = input("\n The peak rainfall value [mm/h]: ").split()
+            settings["peak_rain"] = [int(x) for x in rain]
+        except ValueError:
+            print(f"\n The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        else:
+            break
+
+    print("\n\nThe average percentage of impervious ground coverage of the area:\n\
+(Positive integers separate by space, for example: 25 33 50)\n")
+    while True:
+        try:
+            perc_imp = input("Percentage of impervious ground [%]: ").split()
+            settings["perc_inp"] = [int(x) for x in perc_imp]
+        except ValueError:
+            print(f"\n The value you entered is incorrect, please try again. \n\
+Make sure to enter in a correct format, as can be seen above in the example")
+            continue    
+        else:
+            break
 
     return settings
 
