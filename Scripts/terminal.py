@@ -350,9 +350,6 @@ Make sure to enter in a correct format, as can be seen above in the example")
     return settings
 
 
-
-
-
 def standard_input():
     """Ask the user for the standard settings value for a single network.
 
@@ -360,6 +357,7 @@ def standard_input():
         dict: The parameters for the system as given by the user
     """
     settings = {}
+    settings["variants"] = 1
     
     print("\n Please enter the described information to enable the next set of calculation steps:")
 
@@ -527,25 +525,28 @@ the software will close once the file has been created.")
 
 def design_choice(variants: dict):
 
-    print("Please pick your preferred variant number: \n\
-              (For example: 1)")
+    print("\nPlease pick your preferred variant number: \n\
+(For example: 1)")
     while True:
         try:
             number = int(input("\n Favourite design: "))
+            settings = variants[f"variant_{number}"]
         except ValueError:
             print(f"\n The value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
+        except KeyError:
+            print("The design variant number you gave does not exist. \n\
+Please try again")
+            continue
         else:
             break
-
-    settings = variants[f"variant_{number}"]
 
     return settings
 
 def settings_uncertainty(settings: dict):
-    print("You may now enter the to be varied in values for \n\
-          the peak rainfall and percentage impervious ground")
+    print("\nYou may now enter the to be varied in values for \n\
+the peak rainfall and percentage impervious ground")
     print("\n The value for the peak rainfall you would like to vary in:\n\
 (Positive integers separate by space, for example: 23 65 118)")
     while True:
