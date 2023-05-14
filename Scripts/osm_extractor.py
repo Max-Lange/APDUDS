@@ -12,6 +12,7 @@ environment you are running this script in.
 This file contains the following functions:
 
     * extractor - Downloads the wanted area from OpenStreetMap
+    * fill_nan - Fills the nan values that are assigned for some elevations
     * cleaner - Cleans and standerdizes the data downloaded by the extractor
     * splitter - Splits the obtained conduits according to the given parameters
     * tester - Only used for testing purposes

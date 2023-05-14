@@ -6,9 +6,11 @@ environment you are running this script in.
 This file contains the following major functions:
 
     * voronoi_area - Calculates the catchment area for each node using voronoi
+    * adjusted_area - Re-calculates the area based on elevation of nearby nodes
     * flow_and_height - Determinte the flow direction and set the node depth
     * flow_amount - Determine the amount of water flow through each conduit
     * diameter_calc - Determine the appropriate diameter for eac conduit
+    * uphold_min_depth - Moves all installation levels of pipes to correct location
     * cleaner_and_trimmer - Remove intermediate information and precision from the data
     * attribute_calculations - Runs the entire attribute calculation process
     * tester - Only used for testing purposes
@@ -274,18 +276,18 @@ def adjusted_area(nodes: pd.DataFrame, edges: pd.DataFrame):
                 length_elevation_below += length * elevation
                 length_below += length
         try:
-            area_up = length_elevation_above / length_above
+            eq_nodes_above = length_elevation_above / length_above
         except ZeroDivisionError:
-            area_up = 0
+            eq_nodes_above = 0
         try:
-            area_down = length_elevation_below / length_below
+            eq_nodes_below = length_elevation_below / length_below
         except ZeroDivisionError:
-            area_down = 0
+            eq_nodes_below = 0
 
         if nodes.at[i, "elevation"] != 0:
-            factor = (np.exp((area_up - area_down) / nodes.at[i, "elevation"]))**0.25
+            factor = (np.exp((eq_nodes_above - eq_nodes_below) / nodes.at[i, "elevation"]))**0.25
         else:
-            factor = (np.exp((area_up - area_down) / elevation))**0.25
+            factor = (np.exp((eq_nodes_above - eq_nodes_below) / elevation))**0.25
         nodes.at[i, "area"] = nodes.at[i, "area"] * factor
 
     return nodes, edges

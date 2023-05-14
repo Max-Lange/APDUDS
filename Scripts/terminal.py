@@ -8,8 +8,11 @@ This file contains the following major functions:
     * area_check - Prints a warning if an area is above a certain threshold
     * yes_no_choice - Presents a yes no [y/n] input space to the user
     * step_1_input - Create the explanations and input space for the network creatin step
-    * step_2_input - Create the explanations and input space for the attribute calculation step
+    * step_2_input - Determines if the user would like to compute multiple variants
+    * variant_input - User may enter input for several possible variants
+    * standard_input - User may enter input for just one design
     * step_3_input - Create the explanations and input space for the SWMM file creation step
+    * design_choice & uncertain_choice - User can tell system their preffered design
     * tester - Only used for testing purposes
 """
 from numpy import (cos, sin, pi, array)
