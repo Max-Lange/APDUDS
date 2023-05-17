@@ -119,12 +119,13 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     graph = nx.Graph()
     graph.add_nodes_from(list(nodes.index.values))
 
+    # Add weights to each conduit based on elevation change
     for _, edge in edges.iterrows():
         slope = (nodes.at[int(edge["from"]), "elevation"] - nodes.at[int(edge["to"]), "elevation"])  / edge["length"]
         if  slope >= 0:
              graph.add_edge(edge["from"], edge["to"], weight = 1 * abs(slope) * edge["length"])
         else:
-            graph.add_edge(edge["from"], edge["to"], weight = 10 * abs(slope) * edge["length"] )
+            graph.add_edge(edge["from"], edge["to"], weight = 10 * abs(slope) * edge["length"] ) #CHANGED FROM FACTOR 10 TO 1
 
     return nodes, edges, graph
 
@@ -230,7 +231,7 @@ def uphold_max_slope(nodes: pd.DataFrame, edges: pd.DataFrame,\
 
             if abs(nodes.at[lower_node, "depth"] - nodes.at[higher_node, "depth"])\
                  / length > max_slope:
-                nodes.at[higher_node, "depth"] = nodes.at[lower_node, "depth"] - length * max_slope
+                nodes.at[higher_node, "depth"] = nodes.at[lower_node, "depth"] + length * max_slope
 
     return nodes
 
@@ -247,7 +248,7 @@ def reset_direction(nodes: pd.DataFrame, edges: pd.DataFrame):
     """
 
     for i, edge in edges.iterrows():
-        if nodes.at[edge["from"], "depth"] > nodes.at[edge["to"], "depth"]:
+        if nodes.at[edge["from"], "depth"] < nodes.at[edge["to"], "depth"]:
             edges.at[i, "from"], edges.at[i, "to"] = edge["to"], edge["from"]
 
     return edges
@@ -444,7 +445,7 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
                                 nodes.at[outfall, "y"] + 5,
                                 nodes.at[outfall, "elevation"],
                                 0,
-                                nodes.depth.max(),
+                                nodes.at[outfall, "depth"],
                                 "outfall",
                                 0,
                                 nodes.at[outfall, "install_depth"]]
@@ -461,10 +462,10 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
                                 nodes.at[overflow, "y"] + 5,
                                 nodes.at[overflow, "elevation"],
                                 0,
-                                settings["min_depth"],
+                                nodes.at[overflow, "depth"],
                                 "overflow",
                                 0,
-                                nodes.at[outfall, "install_depth"]]
+                                nodes.at[overflow, "install_depth"]]
 
         edges.loc[len(edges)] = [new_index,
                                  overflow,
@@ -491,8 +492,9 @@ def loop(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict, type: str):
     if type == "outfall":
         nodes, edges = adjusted_area(nodes, edges)
     nodes, edges = flow_amount(nodes, edges, settings)
-    edges = diameter_calc(edges, settings["diam_list"])
+    edges = diameter_calc(edges, settings["diam_list"]) 
     nodes, edges = uphold_min_depth(nodes, edges, settings)
+
     return nodes, edges
 
 

@@ -92,9 +92,19 @@ def fill_nan(nodes: pd.DataFrame, edges: pd.DataFrame):
             else:
                 length_elevation += edge["length"] * nodes.at[int(edge["to"]), "elevation"]
             length += edge["length"]
-        nodes.at[i, "elevation"] = length_elevation / length
-        
-
+        for _, edge in edges[edges["to"] == i].iterrows():
+            if pd.isna(nodes.at[int(edge["from"]), "elevation"]):
+                continue
+            else:
+                length_elevation += edge["length"] * nodes.at[int(edge["from"]), "elevation"]
+            length += edge["length"]
+        try:
+            nodes.at[i, "elevation"] = length_elevation / length
+        except ZeroDivisionError:
+            print("\nUnsolvable node elevation encountered, all connecting nodes are NaN. \n\
+Taking for the nodal elevation the average of entire network")
+            nodes.at[i, "elevation"] = nodes["elevation"].mean()
+            continue
 
     return nodes, edges
 

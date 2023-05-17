@@ -65,9 +65,9 @@ def voronoi_plotter(nodes: DataFrame, voro, subplot_number: int):
     plt.axis("scaled")
 
 
-def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:int, fig):
+def height_contour_plotter_local(nodes: DataFrame, edges: DataFrame, subplot_number:int, fig):
     """Creates a subplot of a contourmap of the depth of the nodes, with the conduit
-    network laid overtop.
+    network laid overtop based on the depth from the local surface.
 
     Args:
         nodes (DataFrame): The node data for a network
@@ -116,9 +116,66 @@ def height_contour_plotter(nodes: DataFrame, edges: DataFrame, subplot_number:in
                  color="white")
 
     cbar = fig.colorbar(contourf, ax=axes)
-    cbar.set_label("Depth below ground [m]")
+    cbar.set_label("Depth below local ground level [m]")
 
-    axes.set_title("Contour Map of the Needed Node Depth")
+    axes.set_title("Required node depth: local")
+    axes.legend()
+    plt.axis("scaled")
+
+def height_contour_plotter_datum(nodes: DataFrame, edges: DataFrame, subplot_number:int, fig):
+    """2nd version of the height contour plotter, this version creates a subplot of a contourmap of the depth of the nodes, with the conduit
+    network laid overtop based on the datum.
+
+    Args:
+        nodes (DataFrame): The node data for a network
+        edges (DataFrame): The conduit data for a network
+        subplot_number (int): Ax to plot to
+    """
+
+    axes = plt.subplot(subplot_number)
+
+    for _, node in nodes.iterrows():
+        if node.role == "node":
+            axes.plot(node.x, node.y, "bo")
+
+    for _, line in edges.iterrows():
+        x_coord = [nodes.at[int(line["from"]), "x"], nodes.at[int(line["to"]), "x"]]
+        y_coord = [nodes.at[int(line["from"]), "y"], nodes.at[int(line["to"]), "y"]]
+        plt.plot(x_coord, y_coord, "b")
+
+    outfalls = nodes.index[nodes['role'] == "outfall"].tolist()
+    for outfall in outfalls:
+        # Special first case for adding a label
+        if outfall == outfalls[0]:
+            axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv", label="Outfall")
+
+        else:
+            axes.plot(nodes.at[outfall, "x"], nodes.at[outfall, "y"], "rv")
+
+    overflows = nodes.index[nodes['role'] == "overflow"].tolist()
+    for overflow in overflows:
+        # Special first case for adding a label
+        if overflow == overflows[0]:
+            axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^", label="Overflow")
+
+        else:
+            axes.plot(nodes.at[overflow, "x"], nodes.at[overflow, "y"], "r^")
+
+    # Add the colored contours
+    x_coords = nodes.x[(nodes.role == "node") | (nodes.role == "outfall")]
+    y_coords = nodes.y[(nodes.role == "node") | (nodes.role == "outfall")]
+    depths = nodes.install_depth[(nodes.role == "node") | (nodes.role == "outfall")]
+    contourf = axes.tricontourf(x_coords, y_coords, depths)
+
+    # Add extra points on the end to get a larger graph extent
+    axes.scatter([nodes.x.min()-50, nodes.x.max()+50],
+                 [nodes.y.min()-50, nodes.y.max()+50],
+                 color="white")
+
+    cbar = fig.colorbar(contourf, ax=axes)
+    cbar.set_label("Depth below datum [m]")
+
+    axes.set_title("Required node depth: datum")
     axes.legend()
     plt.axis("scaled")
 

@@ -319,10 +319,10 @@ Make sure to enter in a correct format, as can be seen above in the example")
     choice = yes_no_choice()
 
     if choice == "y":
-        print("\n The chosen default values are 36 mm/h of peak rain with a 50 % \n\
+        print("\n The chosen default values are 36 mm/h of peak rain with a 70 % \n\
               ground imperviousness")
         settings["peak _rain"] = 36
-        settings["perc_inp"] = 50
+        settings["perc_inp"] = 70
 
     elif choice == "n":
         print("\n\nEnter the peak rainfall value for the design storm:\n\

@@ -19,7 +19,7 @@ from pandas import DataFrame
 from attribute_calculator import attribute_calculation 
 from terminal import design_choice, uncertain_choice, settings_uncertainty
 from osm_extractor import splitter
-from plotter import voronoi_plotter, height_contour_plotter, diameter_map
+from plotter import voronoi_plotter, height_contour_plotter_datum, height_contour_plotter_local, diameter_map
 
 
 def multiple_variant(nodes: DataFrame, edges: DataFrame, settings: dict, block: bool = False):
@@ -47,7 +47,8 @@ def multiple_variant(nodes: DataFrame, edges: DataFrame, settings: dict, block: 
 
         fig = plt.figure()
         voronoi_plotter(variants_design[f"nodes_{j + 1}"], variants_design[f"voronoi_area_{j + 1}"], 221)
-        height_contour_plotter(variants_design[f"nodes_{j + 1}"], variants_design[f"edges_{j + 1}"], 222, fig)
+        height_contour_plotter_local(variants_design[f"nodes_{j + 1}"], variants_design[f"edges_{j + 1}"], 222, fig)
+        height_contour_plotter_datum( variants_design[f"nodes_{j + 1}"], variants_design[f"edges_{j + 1}"], 224, fig)
         diameter_map(variants_design[f"nodes_{j + 1}"], variants_design[f"edges_{j + 1}"], 223)
         fig.suptitle(f"Design {j + 1}")
         fig.tight_layout()
@@ -71,7 +72,8 @@ of the design once all figures are closed.")
 
         fig = plt.figure()
         voronoi_plotter(variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"voronoi_area_{j + 1}"], 221)
-        height_contour_plotter( variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], 222, fig)
+        height_contour_plotter_local( variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], 222, fig)
+        height_contour_plotter_datum( variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], 224, fig)
         diameter_map(variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], 223)
         fig.suptitle(f"Design {j + 1}")
         fig.tight_layout()
@@ -105,7 +107,8 @@ def single_variant(nodes: DataFrame, edges: DataFrame, settings: dict, block: bo
     print("\nCompleted the attribute calculations, plotting graphs...")
     fig = plt.figure()        
     voronoi_plotter(nodes, voro, 221)
-    height_contour_plotter(nodes, edges, 222, fig)
+    height_contour_plotter_local(nodes, edges, 222, fig)
+    height_contour_plotter_datum(nodes, edges, 224, fig)
     diameter_map(nodes, edges, 223)
     fig.suptitle(f"Design {1}")
     fig.tight_layout()
@@ -132,13 +135,14 @@ def variation_design(settings: dict):
     random_settings["overflows"] = rnd.choice(settings["overflows"], rnd.random_integers(1, 3), replace=True)
     random_settings["min_depth"] = rnd.choice(settings["min_depth"], 1)[0]
     random_settings["min_slope"] = rnd.choice(settings["min_slope"], 1)[0]
-
-    while True:
-        random_settings["max_slope"] = rnd.choice(settings["max_slope"], 1)[0]
-        if random_settings["max_slope"] > random_settings["min_slope"]:
-            break
-        else:
-            continue
+    
+    if "max_slope" in settings:
+        while True:
+            random_settings["max_slope"] = rnd.choice(settings["max_slope"], 1)[0]
+            if random_settings["max_slope"] > random_settings["min_slope"]:
+                break
+            else:
+                continue
 
     return random_settings
 
