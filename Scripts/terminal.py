@@ -25,6 +25,8 @@ def area_check(coords: list[float], threshold: int):
     Args:
         coords (list[float]): north, south, east and west coordinates of an area
         threshold (int): The value to check against
+
+    return area (float): The calculated area
     """
     def coord_vector(x, y):
         X = 6378 * cos(x * 2 * pi / 360) * cos(y * 2 * pi / 360)
@@ -54,6 +56,8 @@ If no, you may enter new coordinates.")
         if choice == 'n':
             print("\n")
             coords = coords_input()
+    
+    return area
 
 
 
@@ -83,6 +87,7 @@ def coords_input() -> list[float]:
 
     Returns:
         list[float]: north, south, east and west coordinates
+        area[float]: Area of the giving bounding box
     """
 
     try:
@@ -111,9 +116,9 @@ def coords_input() -> list[float]:
         print("")
         coords = coords_input()
 
-    area_check(coords, 5)
+    area = area_check(coords, 5)
 
-    return coords
+    return coords, area
 
 
 def manhole_space_input() -> int:
@@ -139,6 +144,8 @@ def step_1_input():
     Returns:
         tuple[list[float], int]: A list of the desired bounding box coordinates, and an integer
         value for the maximum allowable manhole spacing
+        api_key[string]: The key for the google elevation API
+        area[float]: Area of the given bounding box
     """
 
 
@@ -148,7 +155,7 @@ def step_1_input():
     The inputs should be in degrees latitude and longitude, for example:\n\
     Enter coordinates of the most northern point: 51.9268\n")
 
-    coords = coords_input()
+    coords, area = coords_input()
 
     print(f"In order for the system to use the google elevation API, an API key has to be given, please do so below. \n\
 An API key can be generated from https://tinyurl.com/elevationapi")
@@ -167,7 +174,7 @@ An API key can be generated from https://tinyurl.com/elevationapi")
     print("\nThe conduit network for the area you selected will \
 now be calculated.\nA figure will appear, after which you can proceed to the next step.")
 
-    return coords,  api_key
+    return coords, api_key, area
 
 
 def step_2_input():

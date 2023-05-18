@@ -511,6 +511,7 @@ def attribute_calculation(nodes: pd.DataFrame, edges: pd.DataFrame, settings: di
         attribute values
     """
     nodes, voro = voronoi_area(nodes, nodes)
+    area = nodes.area.sum()
 
     nodes_copy = nodes.copy()
     edges_copy = edges.copy()

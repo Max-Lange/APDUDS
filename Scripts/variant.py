@@ -14,6 +14,7 @@ This file contains the following major functions:
 """
 
 from numpy import random as rnd
+from numpy import concatenate as concatenate
 import matplotlib.pyplot as plt
 from pandas import DataFrame
 from attribute_calculator import attribute_calculation 
@@ -22,23 +23,25 @@ from osm_extractor import splitter
 from plotter import voronoi_plotter, height_contour_plotter_datum, height_contour_plotter_local, diameter_map
 
 
-def multiple_variant(nodes: DataFrame, edges: DataFrame, settings: dict, block: bool = False):
+def multiple_variant(nodes: DataFrame, edges: DataFrame, settings: dict, area: float, block: bool = False):
     """Initialises the calculation step for multiple variants by determining different settings per variant.
 
     Args:
         nodes (DataFrame): The node data for a network
         edges (DataFrame): The conduit data for a network
         settings (dict): The parameters for a network
+        area (float): The given area of the network
 
     Returns:
         tuple[DataFrame, DataFrame, freud.locality.voronoi]: Node and conduit data with updated
         values for the attributes, as well as a voronoi object for use in the SWMM file creation
     """
     
-    rnd.seed(1)
+    
     variants_design = {}
+    rnd.seed(1)
     for j in range(settings["variants"]):
-        variants_design[f"variant_{j + 1}"] = variation_design(settings)
+        variants_design[f"variant_{j + 1}"] = variation_design(settings, area)
         nodes, edges = splitter(nodes, edges, variants_design[f"variant_{j + 1}"]["spacing"])
         print(f"\nStarting the attribute calculation step for variant {j + 1}...")
         variants_design[f"nodes_{j +1 }"], variants_design[f"edges_{j + 1}"], variants_design[f"voronoi_area_{j + 1}"] \
@@ -117,11 +120,12 @@ def single_variant(nodes: DataFrame, edges: DataFrame, settings: dict, block: bo
 
     return nodes, edges, voro
 
-def variation_design(settings: dict):
+def variation_design(settings: dict, area: float):
     """Determines the design parameters for one iteration of the network design.
 
     Args:
         settings (dict): All the parameters for a network
+        area (float): Area of the bounding box of the network
 
     Returns:
         settings (dict): Selected parameters for one network
@@ -132,9 +136,16 @@ def variation_design(settings: dict):
 
     random_settings["spacing"] = rnd.choice(settings["spacing"], 1)[0]
     random_settings["outfalls"] = rnd.choice(settings["outfalls"], 1)
-    random_settings["overflows"] = rnd.choice(settings["overflows"], rnd.random_integers(1, 3), replace=True)
     random_settings["min_depth"] = rnd.choice(settings["min_depth"], 1)[0]
     random_settings["min_slope"] = rnd.choice(settings["min_slope"], 1)[0]
+
+    if area > 4:    #If area larger than 4 km^2 pick between 2 and 4 overflows
+        random_settings["overflows"] = rnd.choice(settings["overflows"], \
+                                                  rnd.random_integers(2, min(4, len(settings["overflows"]))), replace=True)
+    elif area > 1:  #If between 1 and 3 km^2 pick between 1 and 3
+        random_settings["overflows"] = rnd.choice(settings["overflows"], rnd.random_integers(1, 3), replace=True)
+    else:           #Else pick 1 overflow
+        random_settings["overflows"] = rnd.choice(settings["overflows"], 1, replace=True)
     
     if "max_slope" in settings:
         while True:

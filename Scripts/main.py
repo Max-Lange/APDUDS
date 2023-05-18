@@ -61,13 +61,14 @@ software after 5 minutes of no response....")
 
     return elevation_nodes, elevation_edges
 
-def step_2(nodes: DataFrame, edges: DataFrame, settings: dict, block: bool = False):
+def step_2(nodes: DataFrame, edges: DataFrame, settings: dict, area: float, block: bool = False):
     """Initialises the calculation step of the software by determining if the user opted for 1 or more variants.
     
     Args:
         nodes (DataFrame): The node data for a network
         edges (DataFrame): The conduit data for a network
         settings (dict): The parameters for a network
+        area (float): Area of the bounding box of the network
 
     Returns:
         tuple[DataFrame, DataFrame, freud.locality.voronoi]: Node and conduit data with updated
@@ -76,7 +77,7 @@ def step_2(nodes: DataFrame, edges: DataFrame, settings: dict, block: bool = Fal
 
     print("\nStarting the variation process...")   
     if settings["variants"] > 1:
-        nodes, edges, voro = multiple_variant(nodes, edges, settings, block)
+        nodes, edges, voro = multiple_variant(nodes, edges, settings, area, block)
 
     else:
         nodes, edges, voro = single_variant(nodes, edges, settings, block)  
@@ -103,13 +104,13 @@ def main():
     Run this function if you want to use the software in the intended way
     """
 
-    coords, api_key = step_1_input()
+    coords, api_key, area = step_1_input()
     nodes, edges = step_1(coords, api_key)
 
 
     settings = step_2_input()
 
-    nodes, edges, voro = step_2(nodes, edges, settings)
+    nodes, edges, voro = step_2(nodes, edges, settings, area)
 
     settings = step_3_input(settings)
     step_3(nodes, edges, voro, settings)
@@ -121,46 +122,46 @@ def tester():
     while skipping the terminal interaction stage.
     """
 
-    # test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
-    test_coords = [47.28400, 47.27306, 12.49628, 12.47098] #Mittersill
+    test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
+    # test_coords = [47.28400, 47.27306, 12.49628, 12.47098] #Mittersill
 
     api_key = loadtxt('api_key.txt', dtype=str)
 
 
-    area_check(test_coords, 5)
+    area = area_check(test_coords, 5)
     nodes, edges = step_1(test_coords, api_key)
 
     #Mittersil
-    test_settings = {"variants": 4,
-                     "spacing": [100, 150],
-                     "outfalls":[68, 23, 109, 43],
-                     "overflows":[148, 139, 119, 99, 45],
-                     "min_depth": [1, 1.4, 1.2],
-                     "min_slope": [0.002, 0.003],
-                     "peak_rain": 20,
-                     "perc_inp": 50,
-                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
-                     "filename": "test_swmm",
-                    #  "max_slope": [0.015, 0.020],
-                     "duration": 2,
-                     "polygons": "n"}
-
-    ### Groot Ammers
-    # test_settings = {"variants": 2,
+    # test_settings = {"variants": 4,
     #                  "spacing": [100, 150],
-    #                  "outfalls":[108, 3, 115],
-    #                  "overflows":[132, 89, 69, 92, 30, 75],
+    #                  "outfalls":[68, 23, 109, 43],
+    #                  "overflows":[148, 139, 119, 99, 45],
     #                  "min_depth": [1, 1.4, 1.2],
     #                  "min_slope": [0.002, 0.003],
-    #                  "peak_rain": 36,
+    #                  "peak_rain": 20,
     #                  "perc_inp": 50,
     #                  "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
     #                  "filename": "test_swmm",
-    #                  "max_slope": [0.015, 0.020],
+    #                 #  "max_slope": [0.015, 0.020],
     #                  "duration": 2,
-    #                  "polygons": "n"}
+                    #  "polygons": "n"}
+
+    ### Groot Ammers
+    test_settings = {"variants": 2,
+                     "spacing": [100, 150],
+                     "outfalls":[108, 3, 115],
+                     "overflows":[132, 89, 69, 92, 30, 75],
+                     "min_depth": [1, 1.4, 1.2],
+                     "min_slope": [0.002, 0.003],
+                     "peak_rain": 36,
+                     "perc_inp": 50,
+                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
+                     "filename": "test_swmm",
+                     "max_slope": [0.015, 0.020],
+                     "duration": 2,
+                     "polygons": "n"}
     
-    nodes, edges, voro = step_2(nodes, edges, test_settings, block=False)
+    nodes, edges, voro = step_2(nodes, edges, test_settings, area, block=False)
 
     step_3(nodes, edges, voro, test_settings)
 
