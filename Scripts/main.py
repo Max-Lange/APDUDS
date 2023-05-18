@@ -128,8 +128,8 @@ def tester():
     while skipping the terminal interaction stage.
     """
 
-    test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
-    # test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
+    # test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
+    test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
     # test_coords = [47.348854, 47.33752, 7.51050, 7.47718] #Switserland
     # test_coords = [47.25575, 47.24906, 12.28927, 12.26838] #neukirchen
     test_space = 200

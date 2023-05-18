@@ -12,6 +12,7 @@ environment you are running this script in.
 This file contains the following functions:
 
     * extractor - Downloads the wanted area from OpenStreetMap
+    * fill_nan - Fills the nan values that are assigned for some elevations
     * cleaner - Cleans and standerdizes the data downloaded by the extractor
     * splitter - Splits the obtained conduits according to the given parameters
     * tester - Only used for testing purposes
@@ -39,6 +40,7 @@ def extractor(coords: list, key: str, aggregation_size=15):
     osm_map = ox.graph_from_bbox(coords[0], coords[1], coords[2], coords[3], custom_filter=cf)
     osm_map = ox.elevation.add_node_elevations_google(osm_map, api_key=key)
     osm_map = ox.elevation.add_edge_grades(osm_map)
+    
 
     osm_projected = ox.project_graph(osm_map)
     osm_consolidated = ox.consolidate_intersections(osm_projected,
@@ -91,9 +93,19 @@ def fill_nan(nodes: pd.DataFrame, edges: pd.DataFrame):
             else:
                 length_elevation += edge["length"] * nodes.at[int(edge["to"]), "elevation"]
             length += edge["length"]
-        nodes.at[i, "elevation"] = length_elevation / length
-        
-
+        for _, edge in edges[edges["to"] == i].iterrows():
+            if pd.isna(nodes.at[int(edge["from"]), "elevation"]):
+                continue
+            else:
+                length_elevation += edge["length"] * nodes.at[int(edge["from"]), "elevation"]
+            length += edge["length"]
+        try:
+            nodes.at[i, "elevation"] = length_elevation / length
+        except ZeroDivisionError:
+            print("\nUnsolvable node elevation encountered, all connecting nodes are NaN. \n\
+Taking for the nodal elevation the average of entire network")
+            nodes.at[i, "elevation"] = nodes["elevation"].mean()
+            continue
 
     return nodes, edges
 
