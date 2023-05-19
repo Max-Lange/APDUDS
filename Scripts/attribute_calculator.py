@@ -6,9 +6,11 @@ environment you are running this script in.
 This file contains the following major functions:
 
     * voronoi_area - Calculates the catchment area for each node using voronoi
+    * adjusted_area - Re-calculates the area based on elevation of nearby nodes
     * flow_and_height - Determinte the flow direction and set the node depth
     * flow_amount - Determine the amount of water flow through each conduit
     * diameter_calc - Determine the appropriate diameter for eac conduit
+    * uphold_min_depth - Moves all installation levels of pipes to correct location
     * cleaner_and_trimmer - Remove intermediate information and precision from the data
     * attribute_calculations - Runs the entire attribute calculation process
     * tester - Only used for testing purposes
@@ -19,8 +21,7 @@ import pandas as pd
 from freud.box import Box
 from freud.locality import Voronoi
 import numpy as np
-
-
+from numpy import random as rnd
 
 def voronoi_area(nodes: pd.DataFrame, edges: pd.DataFrame):
     """Calculates the catchment area for the nodes using voronoi
@@ -118,12 +119,13 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
     graph = nx.Graph()
     graph.add_nodes_from(list(nodes.index.values))
 
+    # Add weights to each conduit based on elevation change
     for _, edge in edges.iterrows():
         slope = (nodes.at[int(edge["from"]), "elevation"] - nodes.at[int(edge["to"]), "elevation"])  / edge["length"]
         if  slope >= 0:
              graph.add_edge(edge["from"], edge["to"], weight = 1 * abs(slope) * edge["length"])
         else:
-            graph.add_edge(edge["from"], edge["to"], weight = 10 * abs(slope) * edge["length"] )
+            graph.add_edge(edge["from"], edge["to"], weight = 10 * abs(slope) * edge["length"] ) #CHANGED FROM FACTOR 10 TO 1
 
     return nodes, edges, graph
 
@@ -229,7 +231,7 @@ def uphold_max_slope(nodes: pd.DataFrame, edges: pd.DataFrame,\
 
             if abs(nodes.at[lower_node, "depth"] - nodes.at[higher_node, "depth"])\
                  / length > max_slope:
-                nodes.at[higher_node, "depth"] = nodes.at[lower_node, "depth"] - length * max_slope
+                nodes.at[higher_node, "depth"] = nodes.at[lower_node, "depth"] + length * max_slope
 
     return nodes
 
@@ -246,7 +248,7 @@ def reset_direction(nodes: pd.DataFrame, edges: pd.DataFrame):
     """
 
     for i, edge in edges.iterrows():
-        if nodes.at[edge["from"], "depth"] > nodes.at[edge["to"], "depth"]:
+        if nodes.at[edge["from"], "depth"] < nodes.at[edge["to"], "depth"]:
             edges.at[i, "from"], edges.at[i, "to"] = edge["to"], edge["from"]
 
     return edges
@@ -275,18 +277,18 @@ def adjusted_area(nodes: pd.DataFrame, edges: pd.DataFrame):
                 length_elevation_below += length * elevation
                 length_below += length
         try:
-            area_up = length_elevation_above / length_above
+            eq_nodes_above = length_elevation_above / length_above
         except ZeroDivisionError:
-            area_up = 0
+            eq_nodes_above = 0
         try:
-            area_down = length_elevation_below / length_below
+            eq_nodes_below = length_elevation_below / length_below
         except ZeroDivisionError:
-            area_down = 0
+            eq_nodes_below = 0
 
         if nodes.at[i, "elevation"] != 0:
-            factor = (np.exp((area_up - area_down) / nodes.at[i, "elevation"]))**0.25
+            factor = (np.exp((eq_nodes_above - eq_nodes_below) / nodes.at[i, "elevation"]))**0.25
         else:
-            factor = (np.exp((area_up - area_down) / elevation))**0.25
+            factor = (np.exp((eq_nodes_above - eq_nodes_below) / elevation))**0.25
         nodes.at[i, "area"] = nodes.at[i, "area"] * factor
 
     return nodes, edges
@@ -443,7 +445,7 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
                                 nodes.at[outfall, "y"] + 5,
                                 nodes.at[outfall, "elevation"],
                                 0,
-                                nodes.depth.max(),
+                                nodes.at[outfall, "depth"],
                                 "outfall",
                                 0,
                                 nodes.at[outfall, "install_depth"]]
@@ -460,10 +462,10 @@ def add_outfalls(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
                                 nodes.at[overflow, "y"] + 5,
                                 nodes.at[overflow, "elevation"],
                                 0,
-                                settings["min_depth"],
+                                nodes.at[overflow, "depth"],
                                 "overflow",
                                 0,
-                                nodes.at[outfall, "install_depth"]]
+                                nodes.at[overflow, "install_depth"]]
 
         edges.loc[len(edges)] = [new_index,
                                  overflow,
@@ -490,8 +492,9 @@ def loop(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict, type: str):
     if type == "outfall":
         nodes, edges = adjusted_area(nodes, edges)
     nodes, edges = flow_amount(nodes, edges, settings)
-    edges = diameter_calc(edges, settings["diam_list"])
+    edges = diameter_calc(edges, settings["diam_list"]) 
     nodes, edges = uphold_min_depth(nodes, edges, settings)
+
     return nodes, edges
 
 
@@ -508,12 +511,12 @@ def attribute_calculation(nodes: pd.DataFrame, edges: pd.DataFrame, settings: di
         attribute values
     """
     nodes, voro = voronoi_area(nodes, nodes)
+    area = nodes.area.sum()
 
     nodes_copy = nodes.copy()
     edges_copy = edges.copy()
 
     nodes, edges = loop(nodes, edges, settings, "outfall")
-    print("Main attribute calculations completed, moving on to overflow diameter calculations...")
 
     loop_setting = settings.copy()
     for overflow in settings["overflows"]:
@@ -524,8 +527,6 @@ def attribute_calculation(nodes: pd.DataFrame, edges: pd.DataFrame, settings: di
             if edges.at[i, "diameter"] < loop_edges.at[i, "diameter"]:
                 edges.at[i, "diameter"] = loop_edges.at[i, "diameter"]
                 edges.at[i, "flow"] = loop_edges.at[i, "flow"]
-
-        print(f"Calculations for the overflow at node {overflow} completed...")
 
     nodes, edges = cleaner_and_trimmer(nodes, edges)
     nodes, edges = add_outfalls(nodes, edges, settings)
