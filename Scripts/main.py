@@ -122,8 +122,8 @@ def tester():
     while skipping the terminal interaction stage.
     """
 
-    # test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
-    test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
+    test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
+    # test_coords = [51.92094, 51.91054, 4.33346, 4.31215] #coords with highway
     # test_coords = [47.348854, 47.33752, 7.51050, 7.47718] #Switserland
     # test_coords = [47.25575, 47.24906, 12.28927, 12.26838] #neukirchen
     test_space = 200
@@ -133,11 +133,11 @@ def tester():
     area = area_check(test_coords, 5)
     nodes, edges = step_1(test_coords, api_key)
 
-    #Mittersil
-    # test_settings = {"variants": 4,
+    #Neukrichen
+    # test_settings = {"variants": 2,
     #                  "spacing": [100, 150],
-    #                  "outfalls":[68, 23, 109, 43],
-    #                  "overflows":[148, 139, 119, 99, 45],
+    #                  "outfalls":[67],
+    #                  "overflows":[75],
     #                  "min_depth": [1, 1.4, 1.2],
     #                  "min_slope": [0.002, 0.003],
     #                  "peak_rain": 20,
@@ -146,10 +146,10 @@ def tester():
     #                  "filename": "test_swmm",
     #                 #  "max_slope": [0.015, 0.020],
     #                  "duration": 2,
-                    #  "polygons": "n"}
+    #                  "polygons": "n"}
 
     ### Groot Ammers
-    test_settings = {"variants": 1,
+    test_settings = {"variants": 2,
                      "spacing": [100, 150],
                      "outfalls":[3],
                      "overflows":[110, 92],
