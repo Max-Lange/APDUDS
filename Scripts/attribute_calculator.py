@@ -125,7 +125,7 @@ def intialize(nodes: pd.DataFrame, edges: pd.DataFrame, settings: dict):
         if  slope >= 0:
              graph.add_edge(edge["from"], edge["to"], weight = 1 * abs(slope) * edge["length"])
         else:
-            graph.add_edge(edge["from"], edge["to"], weight = 10 * abs(slope) * edge["length"] ) #CHANGED FROM FACTOR 10 TO 1
+            graph.add_edge(edge["from"], edge["to"], weight = 10 * abs(slope) * edge["length"] )
 
     return nodes, edges, graph
 

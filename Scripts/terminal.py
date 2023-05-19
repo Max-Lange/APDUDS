@@ -320,9 +320,8 @@ Make sure to enter in a correct format, as can be seen above in the example")
         else:
             break
     
-    print("\n Would you like to base the initial variants, those based on design choices, to have \n\
-          the default uncertain parameters (peak rain and percentage imperviousness) or would \n\
-          you rather add temporary values for these yourselves?")
+    print("\n For the initial peak rain and percentage inpervious ground would you like to enter \n\
+user defined temporary values? If not, the system will use its default values.")
     choice = yes_no_choice()
 
     if choice == "y":
