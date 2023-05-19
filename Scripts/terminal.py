@@ -328,7 +328,7 @@ Make sure to enter in a correct format, as can be seen above in the example")
     if choice == "y":
         print("\n The chosen default values are 36 mm/h of peak rain with a 70 % \n\
               ground imperviousness")
-        settings["peak _rain"] = 36
+        settings["peak_rain"] = 36
         settings["perc_inp"] = 70
 
     elif choice == "n":
