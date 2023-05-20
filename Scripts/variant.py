@@ -135,7 +135,7 @@ def variation_design(settings: dict, area: float):
     random_settings = settings.copy()
 
     random_settings["spacing"] = rnd.choice(settings["spacing"], 1)[0]
-    random_settings["outfalls"] = rnd.choice(settings["outfalls"], 1)
+    random_settings["outfalls"] = rnd.choice(settings["outfalls"], 1, replace=True)
     random_settings["min_depth"] = rnd.choice(settings["min_depth"], 1)[0]
     random_settings["min_slope"] = rnd.choice(settings["min_slope"], 1)[0]
 
@@ -166,12 +166,12 @@ def variation_uncertainty(settings: dict):
 
     Returns:
         settings (dict): Selected parameters for one network
-    """
+    """ 
 
     random_settings = {}
 
     random_settings = settings.copy()
-    random_settings["peak_rain"] = rnd.choice(settings["peak_rain"], 1)[0]
-    random_settings["perc_inp"] = rnd.choice(settings["perc_inp"], 1)[0]
+    random_settings["peak_rain"] = rnd.choice(settings["peak_rain"], 1, replace=False)[0]
+    random_settings["perc_inp"] = rnd.choice(settings["perc_inp"], 1, replace=False)[0]
 
     return random_settings
