@@ -157,7 +157,7 @@ def step_1_input():
 
     coords, area = coords_input()
 
-    print(f"In order for the system to use the google elevation API, an API key has to be given, please do so below. \n\
+    print(f"\nIn order for the system to use the google elevation API, an API key has to be given, please do so below. \n\
 An API key can be generated from https://tinyurl.com/elevationapi")
     
     while True:
@@ -185,9 +185,13 @@ def step_2_input():
         dict: The parameters for the system as given by the user
     """
     
-    print("\n\n Now that the network has been generated, the user can choose wether it wants to \n\
+    print("\n\nNow that the network has been generated, the user can choose wether it wants to \n\
 create multiple networks for the given area or not.")
-    print("Please enter wether you would like to make multiple designs for the given area.")
+    print("The iteration process works as follows. A set amount of variants are made based on \n\
+design choices such as minimum depth and overflow points. From these variants you may \n\
+pick one favourite with which variants for different design storms and ground \n\
+imperviousness will be created. From this one network can be selected and exported as a SWMM file.")
+    print("Please enter wether you would like to make multiple iterations for the given area.")
     choice = yes_no_choice()
 
     if choice == "n":
@@ -205,13 +209,10 @@ def variant_input():
         dict: The parameters for the system as given by the user
     """
 
-    print("The variation process works as follows. a set amount of variants are made based on \n\
-          design choices such as minimum depth and overflow points. From these variants you may \n\
-          pick one favourite with which variants of for different design storms and ground \n\
-          imperviousness will be created.")
+
      
     settings = {}
-    print("\n Please enter the described information to enable the next set of calculation steps:")
+    print("\nPlease enter the described information to enable the next set of calculation steps:")
 
     while True:
         try:
@@ -222,7 +223,7 @@ def variant_input():
         else: 
             break    
     
-    print("\n Please enter the maximum allowable spacing between manholes. \n\
+    print("\nPlease enter the maximum allowable spacing between manholes. \n\
 (Should be a positive integer, for example: 100)")
     while True:
         try:
@@ -242,103 +243,103 @@ Please try again:\n")
             outfalls = input("Outfall point index: ").split()
             settings["outfalls"] = [int(x) for x in outfalls]
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
             break
 
-    print("\n\nThe indices of the points which you want to designate as overflow points:\n\
+    print("\nThe indices of the points which you want to designate as overflow points:\n\
 (Positive integers separate by space, for example: 23 65 118)\n")
     while True:
         try:
             overflows = input("Overflows points indices: ").split()      
             settings["overflows"] = [int(x) for x in overflows]
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
             break
 
-    print("\n\nThe minimum depth below the ground at which conduits can be installed:\n\
+    print("\nThe minimum depth below the ground at which conduits can be installed:\n\
 (Positive floats separate by space, for example: 1 1.1 0.9)\n")
     while True:
         try:
             min_depth = input("Minimum installation depth [m]: ").split()
             settings["min_depth"] = [float(x) for x in min_depth]
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
             break
 
-    print("\n\nEnter the required minimum slope for the conduits:\n\
+    print("\nEnter the required minimum slope for the conduits:\n\
 (Should be positive decimal numbers seperate by a space, for example: 0.002 0.004)\n")
     while True:
         try:
             min_slope = input("Minimum slope [m/m]: ").split()
             settings["min_slope"] = [float(x) for x in min_slope]
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
             break
 
-    print("\n\nDo you want to enter a maximum allowable slope as well?")
+    print("\nDo you want to enter a maximum allowable slope as well?")
     choice = yes_no_choice()
     if choice == "y":
-        print("\n\nMaximum slope should always be larger than the minimum slope:\n\
+        print("\nMaximum slope should always be larger than the minimum slope:\n\
 (Should be a positive decimal number, for example: 0.004)")
         while True:
             try: 
                 max_slope = input("Maximum slope [m/m]: ").split()
                 settings["max_slope"] = [float(x) for x in max_slope]
             except ValueError:
-                print(f"\n The value you entered is incorrect, please try again. \n\
+                print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
                 continue
             if(max(settings["max_slope"]) <= min(settings["min_slope"])):
-                print(f"\n None of the values you entered are larger than the minimum slope. \n\
+                print(f"\nNone of the values you entered are larger than the minimum slope. \n\
 Please try again.")
                 continue
             else:
                 break
 
-    print("\n\nA list of the available diameters of the conduits:\n\
+    print("\nA list of the available diameters of the conduits:\n\
 (Should be a series of number separated by spaces, for example: 150 300 500 1000)\n")
     while True:
         try:
             diam_list = input("List of available diameters [mm]: ").split()
             settings["diam_list"] = [int(x) / 1000 for x in diam_list]
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
             break
     
-    print("\n For the initial peak rain and percentage inpervious ground would you like to enter \n\
+    print("\nFor the initial peak rain and percentage inpervious ground would you like to enter \n\
 user defined temporary values? If not, the system will use its default values.")
     choice = yes_no_choice()
 
-    if choice == "y":
-        print("\n The chosen default values are 36 mm/h of peak rain with a 70 % \n\
+    if choice == "n":
+        print("\nThe set default values are 36 mm/h of peak rain with a 70 % \n\
               ground imperviousness")
         settings["peak_rain"] = 36
         settings["perc_inp"] = 70
 
-    elif choice == "n":
-        print("\n\nEnter the peak rainfall value for the design storm:\n\
+    elif choice == "y":
+        print("\nEnter the peak rainfall value for the design storm:\n\
 (Should be a positive integer, for example: 23)\n")
 
         while True:
             try:
                 settings["peak_rain"] = int(input("The peak rainfall value [mm/h]: "))
             except ValueError:
-                print(f"\n The value you entered is incorrect, please try again. \n\
+                print(f"\nThe value you entered is incorrect, please try again. \n\
     Make sure to enter in a correct format, as can be seen above in the example")
                 continue    
             else:
@@ -368,14 +369,14 @@ def standard_input():
     settings = {}
     settings["variants"] = 1
     
-    print("\n Please enter the described information to enable the next set of calculation steps:")
+    print("\nPlease enter the described information to enable the next set of calculation steps:")
 
     print("Please enter the maximum allowable spacing between manholes. \n\
 (Should be a positive integer, for example: 100)")
     while True:
 
         try:
-            settings["spacing"] = int(input("\n Maximum allowable manhole spacing: "))
+            settings["spacing"] = int(input("\nMaximum allowable manhole spacing: "))
 
         except ValueError:
             print("\nThe input was not in the correct format (ex: 20)\nPlease try again:\n")
@@ -390,45 +391,45 @@ def standard_input():
             outfalls = input("Outfall point index: ").split()
             settings["outfalls"] = [int(x) for x in outfalls]
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
             break
 
-    print("\n\nThe indices of the points which you want to designate as overflow points:\n\
+    print("\nThe indices of the points which you want to designate as overflow points:\n\
 (Positive integers separate by space, for example: 23 65 118)\n")
     while True:
         try:
             overflows = input("Overflows points indices: ").split()      
             settings["overflows"] = [int(x) for x in overflows]
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
             break
             
 
-    print("\n\nThe minimum depth below the ground at which conduits can be installed:\n\
+    print("\nThe minimum depth below the ground at which conduits can be installed:\n\
 (Should be a positive integer or decimal number, for example: 1.1)\n")
     while True:
         try:
             settings["min_depth"] = float(input("Minimum installation depth [m]: "))
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
             break
 
-    print("\n\nEnter the required minimum slope for the conduits:\n\
+    print("\nEnter the required minimum slope for the conduits:\n\
 (Should be a positive decimal number, for example: 0.002)\n")
     while True:
         try:
             settings["min_slope"] = float(input("Minimum slope [m/m]: "))
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
@@ -437,55 +438,55 @@ Make sure to enter in a correct format, as can be seen above in the example")
     print("\n\nDo you want to enter a maximum allowable slope as well?")
     choice = yes_no_choice()
     if choice == "y":
-        print("\n\nMaximum slope should always be larger than the minimum slope:\n\
+        print("\nMaximum slope should always be larger than the minimum slope:\n\
 (Should be a positive decimal number, for example: 0.004)")
         while True:
             try: 
                 settings["max_slope"] = float(input("Maximum slope [m/m]: "))
             except ValueError:
-                print(f"\n The value you entered is incorrect, please try again. \n\
+                print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
                 continue
             if(settings["max_slope"] <= settings["min_slope"]):
-                print(f"\n The value you entered is not larger than the minimum slope. \n\
+                print(f"\nThe value you entered is not larger than the minimum slope. \n\
 Please try again.")
                 continue
             else:
                 break
 
-    print("\n\nEnter the peak rainfall value for the design storm:\n\
+    print("\nEnter the peak rainfall value for the design storm:\n\
 (Should be a positive integer, for example: 23)\n")
 
     while True:
         try:
             settings["peak_rain"] = int(input("The peak rainfall value [mm/h]: "))
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
             break
 
-    print("\n\nThe average percentage of impervious ground coverage of the area:\n\
+    print("\nThe average percentage of impervious ground coverage of the area:\n\
 (Should be a positive integer number between 0 and 100, for example: 25)\n")
     while True:
         try:
             settings["perc_inp"] = int(input("Percentage of impervious ground [%]: "))
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
             break
 
-    print("\n\nA list of the available diameters of the conduits:\n\
+    print("\nA list of the available diameters of the conduits:\n\
 (Should be a series of number separated by spaces, for example: 150 300 500 1000)\n")
     while True:
         try:
             diam_list = input("List of available diameters [mm]: ").split()
             settings["diam_list"] = [int(x) / 1000 for x in diam_list]
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
@@ -538,10 +539,10 @@ def design_choice(variants: dict):
 (For example: 1)")
     while True:
         try:
-            number = int(input("\n Favourite design: "))
+            number = int(input("\nFavourite design: "))
             settings = variants[f"variant_{number}"]
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         except KeyError:
@@ -581,27 +582,27 @@ Please try again")
 def settings_uncertainty(settings: dict):
     print("\nYou may now enter the to be varied in values for \n\
 the peak rainfall and percentage impervious ground")
-    print("\n The value for the peak rainfall you would like to vary in:\n\
+    print("\nThe value for the peak rainfall you would like to vary in:\n\
 (Positive integers separate by space, for example: 23 65 118)")
     while True:
         try:
-            rain = input("\n The peak rainfall value [mm/h]: ").split()
+            rain = input("\nThe peak rainfall value [mm/h]: ").split()
             settings["peak_rain"] = [int(x) for x in rain]
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:
             break
 
-    print("\n\nThe average percentage of impervious ground coverage of the area:\n\
+    print("\nThe average percentage of impervious ground coverage of the area:\n\
 (Positive integers separate by space, for example: 25 33 50)\n")
     while True:
         try:
             perc_imp = input("Percentage of impervious ground [%]: ").split()
             settings["perc_inp"] = [int(x) for x in perc_imp]
         except ValueError:
-            print(f"\n The value you entered is incorrect, please try again. \n\
+            print(f"\nThe value you entered is incorrect, please try again. \n\
 Make sure to enter in a correct format, as can be seen above in the example")
             continue    
         else:

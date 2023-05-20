@@ -56,7 +56,9 @@ software after 5 minutes of no response....")
     print("Completed the data gap fill, plotting graphs...")
     _ = plt.figure()
     network_plotter(elevation_nodes, elevation_edges, 111, numbered=True)
-
+    print("\nNetwork creation process completed. \n\
+Please determine your preferred outfall and overflow locations from the figure. \n\
+Then close the figure and proceed to the next step.")
     plt.show(block=block)
 
     return elevation_nodes, elevation_edges
