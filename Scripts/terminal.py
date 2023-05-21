@@ -187,11 +187,11 @@ def step_2_input():
     
     print("\n\nNow that the network has been generated, the user can choose wether it wants to \n\
 create multiple networks for the given area or not.")
-    print("The iteration process works as follows. A set amount of variants are made based on \n\
+    print("\nThe iteration process works as follows. A set amount of variants are made based on \n\
 design choices such as minimum depth and overflow points. From these variants you may \n\
 pick one favourite with which variants for different design storms and ground \n\
 imperviousness will be created. From this one network can be selected and exported as a SWMM file.")
-    print("Please enter wether you would like to make multiple iterations for the given area.")
+    print("\nPlease enter wether you would like to make multiple iterations for the given area.")
     choice = yes_no_choice()
 
     if choice == "n":
@@ -327,7 +327,7 @@ user defined temporary values? If not, the system will use its default values.")
 
     if choice == "n":
         print("\nThe set default values are 36 mm/h of peak rain with a 70 % \n\
-              ground imperviousness")
+ground imperviousness")
         settings["peak_rain"] = 36
         settings["perc_inp"] = 70
 
