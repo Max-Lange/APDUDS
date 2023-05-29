@@ -36,7 +36,7 @@ def extractor(coords: list, key: str, aggregation_size=15):
     """
 
     # Download osm data, reproject into meter-using coordinate system, consolidate nearby nodes
-    cf = '["highway"~"secondary|tertiary|residential|living_street|service|pedestrian|busway"]'
+    cf = '["highway"~"secondary|tertiary|residential|living_street|service|pedestrian|busway|unclassified"]'
     osm_map = ox.graph_from_bbox(coords[0], coords[1], coords[2], coords[3], custom_filter=cf)
     osm_map = ox.elevation.add_node_elevations_google(osm_map, api_key=key)
     osm_map = ox.elevation.add_edge_grades(osm_map)

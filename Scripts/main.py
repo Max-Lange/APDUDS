@@ -122,7 +122,9 @@ def tester():
     while skipping the terminal interaction stage.
     """
 
-    test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
+    test_coords = [52.11068,52.09990, 5.14266, 5.131630] #Tuindorp right side
+    # test_coords = [52.11238, 52.10007, 5.14027, 5.11440] #Tuindorp
+    # test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
     # test_coords = [47.25557, 47.24798, 12.29110, 12.26844] #Neukirchen
 
     api_key = loadtxt('api_key.txt', dtype=str)
@@ -154,6 +156,21 @@ def tester():
                      "min_depth": [1, 1.4, 1.2],
                      "min_slope": [0.002, 0.003],
                      "peak_rain": 36,
+                     "perc_inp": 50,
+                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
+                     "filename": "test_swmm",
+                     "max_slope": [0.015, 0.020],
+                     "duration": 2,
+                     "polygons": "n"}
+    
+    ### Tuindorp right side
+    test_settings = {"variants": 4,
+                     "spacing": [50],
+                     "outfalls":[28, 89],
+                     "overflows":[28, 89],
+                     "min_depth": [1, 1.4, 1.2],
+                     "min_slope": [0.002, 0.003],
+                     "peak_rain": 32.4,
                      "perc_inp": 50,
                      "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
                      "filename": "test_swmm",
