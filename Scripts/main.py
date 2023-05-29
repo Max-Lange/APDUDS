@@ -56,7 +56,9 @@ software after 5 minutes of no response....")
     print("Completed the data gap fill, plotting graphs...")
     _ = plt.figure()
     network_plotter(elevation_nodes, elevation_edges, 111, numbered=True)
-
+    print("\nNetwork creation process completed. \n\
+Please determine your preferred outfall and gitoverflow locations from the figure. \n\
+Then close the figure and proceed to the next step.")
     plt.show(block=block)
 
     return elevation_nodes, elevation_edges
@@ -149,10 +151,10 @@ def tester():
     #                  "polygons": "n"}
 
     ### Groot Ammers
-    test_settings = {"variants": 2,
-                     "spacing": [100, 150],
-                     "outfalls":[108, 3, 115],
-                     "overflows":[132, 89, 69, 92, 30, 75],
+    test_settings = {"variants": 3,
+                     "spacing": [100, 125, 150],
+                     "outfalls":[108, 3, 115, 30, 22, 139, 68],
+                     "overflows":[132, 89, 69, 92, 30, 75, 115, 66, 22],
                      "min_depth": [1, 1.4, 1.2],
                      "min_slope": [0.002, 0.003],
                      "peak_rain": 36,
@@ -184,4 +186,4 @@ def tester():
 
 
 if __name__ == "__main__":
-    tester()
+    main()

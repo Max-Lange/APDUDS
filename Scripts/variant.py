@@ -53,7 +53,8 @@ def multiple_variant(nodes: DataFrame, edges: DataFrame, settings: dict, area: f
         height_contour_plotter_local(variants_design[f"nodes_{j + 1}"], variants_design[f"edges_{j + 1}"], 222, fig)
         height_contour_plotter_datum( variants_design[f"nodes_{j + 1}"], variants_design[f"edges_{j + 1}"], 224, fig)
         diameter_map(variants_design[f"nodes_{j + 1}"], variants_design[f"edges_{j + 1}"], 223)
-        fig.suptitle(f"Design {j + 1}")
+        variant_settings = variants_design[f"variant_{j + 1}"].copy()
+        fig.suptitle(f"Design variant {j + 1} \n spacing: {variant_settings['spacing']}; min_slope: {variant_settings['min_slope']}; min_depth: {variant_settings['min_depth']}")
         fig.tight_layout()
         
     print(f"\nPlease pick your favourite design, you will be able to enter the number \n\
@@ -78,7 +79,9 @@ of the design once all figures are closed.")
         height_contour_plotter_local( variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], 222, fig)
         height_contour_plotter_datum( variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], 224, fig)
         diameter_map(variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], 223)
-        fig.suptitle(f"Design {j + 1}")
+        variant_settings = variants_uncertain[f"variant_{j + 1}"].copy()
+        fig.suptitle(f"Uncertainty variant {j + 1} \n peak_rain: {variant_settings['peak_rain']}; perc_inp: {variant_settings['perc_inp']}")
+     
         fig.tight_layout()
     print("\nDiameter calculations finished for all variants.")
 
@@ -135,7 +138,7 @@ def variation_design(settings: dict, area: float):
     random_settings = settings.copy()
 
     random_settings["spacing"] = rnd.choice(settings["spacing"], 1)[0]
-    random_settings["outfalls"] = rnd.choice(settings["outfalls"], 1)
+    random_settings["outfalls"] = rnd.choice(settings["outfalls"], 1, replace=True)
     random_settings["min_depth"] = rnd.choice(settings["min_depth"], 1)[0]
     random_settings["min_slope"] = rnd.choice(settings["min_slope"], 1)[0]
 
@@ -166,12 +169,12 @@ def variation_uncertainty(settings: dict):
 
     Returns:
         settings (dict): Selected parameters for one network
-    """
+    """ 
 
     random_settings = {}
 
     random_settings = settings.copy()
-    random_settings["peak_rain"] = rnd.choice(settings["peak_rain"], 1)[0]
-    random_settings["perc_inp"] = rnd.choice(settings["perc_inp"], 1)[0]
+    random_settings["peak_rain"] = rnd.choice(settings["peak_rain"], 1, replace=False)[0]
+    random_settings["perc_inp"] = rnd.choice(settings["perc_inp"], 1, replace=False)[0]
 
     return random_settings
