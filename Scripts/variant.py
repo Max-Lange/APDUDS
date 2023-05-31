@@ -80,7 +80,10 @@ of the design once all figures are closed.")
         height_contour_plotter_datum( variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], 224, fig)
         diameter_map(variants_uncertain[f"nodes_{j + 1}"], variants_uncertain[f"edges_{j + 1}"], 223)
         variant_settings = variants_uncertain[f"variant_{j + 1}"].copy()
-        fig.suptitle(f"Uncertainty variant {j + 1} \n peak_rain: {variant_settings['peak_rain']}; perc_inp: {variant_settings['perc_inp']}")
+        diam_max = variants_uncertain[f"edges_{j + 1}"]["diameter"].max()
+        diam_min = variants_uncertain[f"edges_{j + 1}"]["diameter"].min()
+        fig.suptitle(f"Uncertainty variant {j + 1} \n peak_rain: {variant_settings['peak_rain']}; perc_inp: {variant_settings['perc_inp']}; \
+max_diam: {diam_max}; min_diam: {diam_min}")
      
         fig.tight_layout()
     print("\nDiameter calculations finished for all variants.")

@@ -95,7 +95,8 @@ def step_3(nodes: DataFrame, edges: DataFrame, voro, settings: dict):
         voro (freud.locality.voronoi): Voronoi object of the nodes of a network
         settings (dict): The parameters for a network
     """
-
+    nodes.to_excel("nodes.xlsx")
+    edges.to_excel("edges.xlsx")
     print("\nStarting the SWMM file creation...")
     swmm_file_creator(nodes, edges, voro, settings)
     print("Completed the SWMM file creation.")
@@ -151,32 +152,32 @@ def tester():
     #                  "polygons": "n"}
 
     ### Groot Ammers
-    test_settings = {"variants": 3,
-                     "spacing": [100, 125, 150],
-                     "outfalls":[108, 3, 115, 30, 22, 139, 68],
-                     "overflows":[132, 89, 69, 92, 30, 75, 115, 66, 22],
-                     "min_depth": [1, 1.4, 1.2],
-                     "min_slope": [0.002, 0.003],
-                     "peak_rain": 36,
-                     "perc_inp": 50,
-                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
-                     "filename": "test_swmm",
-                     "max_slope": [0.015, 0.020],
-                     "duration": 2,
-                     "polygons": "n"}
+    # test_settings = {"variants": 3,
+    #                  "spacing": [100, 125, 150],
+    #                  "outfalls":[108, 3, 115, 30, 22, 139, 68],
+    #                  "overflows":[132, 89, 69, 92, 30, 75, 115, 66, 22],
+    #                  "min_depth": [1, 1.4, 1.2],
+    #                  "min_slope": [0.002, 0.003],
+    #                  "peak_rain": 36,
+    #                  "perc_inp": 50,
+    #                  "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
+    #                  "filename": "test_swmm",
+    #                  "max_slope": [0.015, 0.020],
+    #                  "duration": 2,
+    #                  "polygons": "n"}
     
     ### Tuindorp right side
-    test_settings = {"variants": 4,
+    test_settings = {"variants": 1,
                      "spacing": [50],
-                     "outfalls":[28, 89],
-                     "overflows":[28, 89],
-                     "min_depth": [1, 1.4, 1.2],
-                     "min_slope": [0.002, 0.003],
-                     "peak_rain": 32.4,
-                     "perc_inp": 50,
-                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
+                     "outfalls":[28],
+                     "overflows":[89],
+                     "min_depth": 1.0,
+                     "min_slope": 0.002,
+                     "peak_rain": 32,
+                     "perc_inp": 75,
+                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5],
                      "filename": "test_swmm",
-                     "max_slope": [0.015, 0.020],
+                     "max_slope": 1/450,
                      "duration": 2,
                      "polygons": "n"}
     
@@ -186,4 +187,4 @@ def tester():
 
 
 if __name__ == "__main__":
-    main()
+    tester()
