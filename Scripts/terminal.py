@@ -346,6 +346,7 @@ ground imperviousness")
                 break
 
         print("\n\nThe average percentage of impervious ground coverage of the area:\n\
+    Meaning the percentage of any type of surface that doesnt absorb rainfall \n\
     (Should be a positive integer number between 0 and 100, for example: 25)\n")
         while True:
             try:
@@ -468,6 +469,7 @@ Make sure to enter in a correct format, as can be seen above in the example")
             break
 
     print("\nThe average percentage of impervious ground coverage of the area:\n\
+Meaning the percentage of any type of surface that doesnt absorb rainfall \n\
 (Should be a positive integer number between 0 and 100, for example: 25)\n")
     while True:
         try:

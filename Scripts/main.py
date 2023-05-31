@@ -168,13 +168,13 @@ def tester():
     
     ### Tuindorp right side
     test_settings = {"variants": 1,
-                     "spacing": [50],
+                     "spacing": [70],
                      "outfalls":[28],
                      "overflows":[89],
                      "min_depth": 1.0,
-                     "min_slope": 0.002,
-                     "peak_rain": 32,
-                     "perc_inp": 75,
+                     "min_slope": 0.001,
+                     "peak_rain": 36,
+                     "perc_inp": 8,
                      "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5],
                      "filename": "test_swmm",
                      "max_slope": 1/450,
