@@ -13,7 +13,7 @@ rest_swmm.ini
 test.py
 api_key.txt
 *.bash_history
-.xlsx
+*.xlsx
 
 
 
