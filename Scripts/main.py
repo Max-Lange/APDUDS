@@ -95,8 +95,6 @@ def step_3(nodes: DataFrame, edges: DataFrame, voro, settings: dict):
         voro (freud.locality.voronoi): Voronoi object of the nodes of a network
         settings (dict): The parameters for a network
     """
-    nodes.to_excel("nodes.xlsx")
-    edges.to_excel("edges.xlsx")
     print("\nStarting the SWMM file creation...")
     swmm_file_creator(nodes, edges, voro, settings)
     print("Completed the SWMM file creation.")
@@ -169,13 +167,13 @@ def tester():
     ### Tuindorp right side
     test_settings = {"variants": 1,
                      "spacing": [70],
-                     "outfalls":[28],
-                     "overflows":[89],
+                     "outfalls":[36],
+                     "overflows":[113],
                      "min_depth": 1.0,
                      "min_slope": 0.001,
                      "peak_rain": 36,
-                     "perc_inp": 8,
-                     "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5],
+                     "perc_inp": 55,
+                     "diam_list": [0.20, 0.35, 0.50, 0.65, 0.80, 0.95, 1.10, 1.25, 1.4, 1.55, 1.7, 1.85, 1.9, 2.05, 2.20, 2.35, 2.50, 2.65, 2.80, 2.95],
                      "filename": "test_swmm",
                      "max_slope": 1/450,
                      "duration": 2,
@@ -183,6 +181,8 @@ def tester():
     
     nodes, edges, voro = step_2(nodes, edges, test_settings, area, block=True)
 
+    nodes.to_excel("jip_nodes.xlsx")
+    edges.to_excel("jip_edges.xlsx")
     step_3(nodes, edges, voro, test_settings)
 
 

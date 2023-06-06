@@ -40,12 +40,13 @@ def extractor(coords: list, key: str, aggregation_size=15):
     osm_map = ox.graph_from_bbox(coords[0], coords[1], coords[2], coords[3], custom_filter=cf)
     osm_map = ox.elevation.add_node_elevations_google(osm_map, api_key=key)
     osm_map = ox.elevation.add_edge_grades(osm_map)
+    
 
     osm_projected = ox.project_graph(osm_map)
     osm_consolidated = ox.consolidate_intersections(osm_projected,
-                                                        tolerance=15,
+                                                        tolerance=7,
                                                         dead_ends=True)
-
+    ox.plot.plot_graph(osm_consolidated)
     # Seperate the nodes and edges, and reset multidimensional index
     osm_nodes, osm_edges = ox.graph_to_gdfs(osm_consolidated)
 
