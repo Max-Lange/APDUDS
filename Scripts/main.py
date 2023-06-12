@@ -123,10 +123,8 @@ def tester():
     while skipping the terminal interaction stage.
     """
 
-    test_coords = [52.11068,52.09990, 5.14266, 5.131630] #Tuindorp right side
-    # test_coords = [52.11238, 52.10007, 5.14027, 5.11440] #Tuindorp
-    # test_coords = [51.9291, 51.92076, 4.8381, 4.8163] #Grootammers
-    # test_coords = [47.25557, 47.24798, 12.29110, 12.26844] #Neukirchen
+    #Tuindorp right side
+    test_coords = [52.11068,52.09990, 5.14266, 5.131630] 
 
     api_key = loadtxt('api_key.txt', dtype=str)
 
@@ -134,36 +132,6 @@ def tester():
     area = area_check(test_coords, 5)
     nodes, edges = step_1(test_coords, api_key)
 
-    # Neukirchen
-    # test_settings = {"variants": 2,
-    #                  "spacing": [100, 150],
-    #                  "outfalls":[74],
-    #                  "overflows":[83],
-    #                  "min_depth": [1],
-    #                  "min_slope": [0.002, 0.003],
-    #                  "peak_rain": 20,
-    #                  "perc_inp": 50,
-    #                  "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
-    #                  "filename": "test_swmm",
-    #                 #  "max_slope": [0.015, 0.020],
-    #                  "duration": 2,
-    #                  "polygons": "n"}
-
-    ### Groot Ammers
-    # test_settings = {"variants": 3,
-    #                  "spacing": [100, 125, 150],
-    #                  "outfalls":[108, 3, 115, 30, 22, 139, 68],
-    #                  "overflows":[132, 89, 69, 92, 30, 75, 115, 66, 22],
-    #                  "min_depth": [1, 1.4, 1.2],
-    #                  "min_slope": [0.002, 0.003],
-    #                  "peak_rain": 36,
-    #                  "perc_inp": 50,
-    #                  "diam_list": [0.25, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3],
-    #                  "filename": "test_swmm",
-    #                  "max_slope": [0.015, 0.020],
-    #                  "duration": 2,
-    #                  "polygons": "n"}
-    
     ### Tuindorp right side
     test_settings = {"variants": 1,
                      "spacing": [70],
@@ -181,10 +149,7 @@ def tester():
     
     nodes, edges, voro = step_2(nodes, edges, test_settings, area, block=True)
 
-    nodes.to_excel("jip_nodes.xlsx")
-    edges.to_excel("jip_edges.xlsx")
     step_3(nodes, edges, voro, test_settings)
 
-
 if __name__ == "__main__":
-    tester()
+    main()

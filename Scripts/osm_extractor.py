@@ -46,7 +46,7 @@ def extractor(coords: list, key: str, aggregation_size=15):
     osm_consolidated = ox.consolidate_intersections(osm_projected,
                                                         tolerance=7,
                                                         dead_ends=True)
-    ox.plot.plot_graph(osm_consolidated)
+
     # Seperate the nodes and edges, and reset multidimensional index
     osm_nodes, osm_edges = ox.graph_to_gdfs(osm_consolidated)
 
