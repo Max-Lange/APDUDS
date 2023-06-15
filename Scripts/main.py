@@ -53,7 +53,7 @@ software after 5 minutes of no response....")
     elevation_nodes, elevation_edges = fill_nan(clean_nodes, clean_edges)
 
 
-    print("Completed the data gap fill, plotting graphs...")
+    print("\nCompleted the data gap fill, plotting graphs...")
     _ = plt.figure()
     network_plotter(elevation_nodes, elevation_edges, 111, numbered=True)
     print("\nNetwork creation process completed. \n\
@@ -76,9 +76,9 @@ def step_2(nodes: DataFrame, edges: DataFrame, settings: dict, area: float, bloc
         tuple[DataFrame, DataFrame, freud.locality.voronoi]: Node and conduit data with updated
         values for the attributes, as well as a voronoi object for use in the SWMM file creation
     """
-
-    print("\nStarting the variation process...")   
+ 
     if settings["variants"] > 1:
+        print("\nStarting the variation process...") 
         nodes, edges, voro = multiple_variant(nodes, edges, settings, area, block)
 
     else:
@@ -124,7 +124,7 @@ def tester():
     """
 
     #Tuindorp right side
-    test_coords = [52.11068,52.09990, 5.14266, 5.131630] 
+    test_coords = [52.11068, 52.09990, 5.14266, 5.131630] 
 
     api_key = loadtxt('api_key.txt', dtype=str)
 

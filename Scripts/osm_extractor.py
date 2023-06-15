@@ -84,28 +84,35 @@ def fill_nan(nodes: pd.DataFrame, edges: pd.DataFrame):
     """
     nodes = nodes.copy()
     edges = edges.copy()
-    for i, _ in nodes[nodes["elevation"].isna()].iterrows():
-        length_elevation = 0
-        length = 0
-        for _, edge in edges[edges["from"] == i].iterrows():
-            if pd.isna(nodes.at[int(edge["to"]), "elevation"]):
+    count, j = 0, 0
+    while len(nodes[nodes["elevation"].isna()]) >= 1:
+        for i, _ in nodes[nodes["elevation"].isna()].iterrows():
+            length_elevation = 0
+            length = 0
+            for _, edge in edges[edges["from"] == i].iterrows():
+                if pd.isna(nodes.at[int(edge["to"]), "elevation"]):
+                    continue
+                else:
+                    length_elevation += edge["length"] * nodes.at[int(edge["to"]), "elevation"]
+                length += edge["length"]
+            for _, edge in edges[edges["to"] == i].iterrows():
+                if pd.isna(nodes.at[int(edge["from"]), "elevation"]):
+                    continue
+                else:
+                    length_elevation += edge["length"] * nodes.at[int(edge["from"]), "elevation"]
+                length += edge["length"]
+            try:
+                nodes.at[i, "elevation"] = length_elevation / length
+                count += 1
+            except ZeroDivisionError:
                 continue
-            else:
-                length_elevation += edge["length"] * nodes.at[int(edge["to"]), "elevation"]
-            length += edge["length"]
-        for _, edge in edges[edges["to"] == i].iterrows():
-            if pd.isna(nodes.at[int(edge["from"]), "elevation"]):
-                continue
-            else:
-                length_elevation += edge["length"] * nodes.at[int(edge["from"]), "elevation"]
-            length += edge["length"]
-        try:
-            nodes.at[i, "elevation"] = length_elevation / length
-        except ZeroDivisionError:
-            print("\nUnsolvable node elevation encountered, all connecting nodes are NaN. \n\
-Taking for the nodal elevation the average of entire network")
-            nodes.at[i, "elevation"] = nodes["elevation"].mean()
-            continue
+
+        j += 1
+        if j >= 20:
+            print(f'\n Too many loops needed to interpolate elevation')
+            break
+
+    print(f"\nOf {count} node(s), the elevation was interpolated")
 
     return nodes, edges
 

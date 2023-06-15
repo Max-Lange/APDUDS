@@ -48,16 +48,17 @@ def area_check(coords: list[float], threshold: int):
     area = ver * hor
 
     if area > threshold:
-        print("\n WARNING: The area you have selected may be larger than 5 km^2.\n\
+        print("\nWARNING: The area you have selected may be larger than 5 km^2.\n\
 This may cause a serious increase in runtime.")
-        print("Do you wish to proceed with increased runtime? \n\
-If no, you may enter new coordinates.")
+        print("\nDo you wish to proceed with increased runtime? \n\
+If you enter no, you may enter new coordinates.")
         choice = yes_no_choice()
         if choice == 'n':
             print("\n")
-            coords = coords_input()
+            coords = []
+            coords, _ = coords_input()
     
-    return area
+    return area, coords
 
 
 
@@ -116,9 +117,9 @@ def coords_input() -> list[float]:
         print("")
         coords = coords_input()
 
-    area = area_check(coords, 5)
+    area, checked_coords = area_check(coords, 5)
 
-    return coords, area
+    return checked_coords, area
 
 
 def manhole_space_input() -> int:
@@ -224,7 +225,7 @@ def variant_input():
             break    
     
     print("\nPlease enter the maximum allowable spacing between manholes. \n\
-(Should be a positive integer, for example: 100)")
+(Must be positive integers seperate by a space, for example: 70 100)")
     while True:
         try:
             spacing = input("Maximum allowable manhole spacing: ").split()
@@ -340,14 +341,14 @@ ground imperviousness")
                 settings["peak_rain"] = int(input("The peak rainfall value [mm/h]: "))
             except ValueError:
                 print(f"\nThe value you entered is incorrect, please try again. \n\
-    Make sure to enter in a correct format, as can be seen above in the example")
+Make sure to enter in a correct format, as can be seen above in the example")
                 continue    
             else:
                 break
 
         print("\n\nThe average percentage of impervious ground coverage of the area:\n\
-    Meaning the percentage of any type of surface that doesnt absorb rainfall \n\
-    (Should be a positive integer number between 0 and 100, for example: 25)\n")
+Meaning the percentage of any type of surface that does not absorb rainfall \n\
+(Should be a positive integer number between 0 and 100, for example: 25)\n")
         while True:
             try:
                 settings["perc_inp"] = int(input("Percentage of impervious ground [%]: "))
