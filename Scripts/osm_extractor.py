@@ -89,18 +89,21 @@ def fill_nan(nodes: pd.DataFrame, edges: pd.DataFrame):
         for i, _ in nodes[nodes["elevation"].isna()].iterrows():
             length_elevation = 0
             length = 0
+
             for _, edge in edges[edges["from"] == i].iterrows():
                 if pd.isna(nodes.at[int(edge["to"]), "elevation"]):
                     continue
                 else:
                     length_elevation += edge["length"] * nodes.at[int(edge["to"]), "elevation"]
                 length += edge["length"]
+
             for _, edge in edges[edges["to"] == i].iterrows():
                 if pd.isna(nodes.at[int(edge["from"]), "elevation"]):
                     continue
                 else:
                     length_elevation += edge["length"] * nodes.at[int(edge["from"]), "elevation"]
                 length += edge["length"]
+                
             try:
                 nodes.at[i, "elevation"] = length_elevation / length
                 count += 1

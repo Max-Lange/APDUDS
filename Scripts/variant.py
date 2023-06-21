@@ -42,10 +42,10 @@ def multiple_variant(nodes: DataFrame, edges: DataFrame, settings: dict, area: f
     rnd.seed(1)
     for j in range(settings["variants"]):
         variants_design[f"variant_{j + 1}"] = variation_design(settings, area)
-        nodes, edges = splitter(nodes, edges, variants_design[f"variant_{j + 1}"]["spacing"])
+        nodes_split, edges_split = splitter(nodes, edges, variants_design[f"variant_{j + 1}"]["spacing"])
         print(f"\nStarting the attribute calculation step for variant {j + 1}...")
         variants_design[f"nodes_{j +1 }"], variants_design[f"edges_{j + 1}"], variants_design[f"voronoi_area_{j + 1}"] \
-            = attribute_calculation(nodes, edges, variants_design[f"variant_{j + 1}"])
+            = attribute_calculation(nodes_split, edges_split, variants_design[f"variant_{j + 1}"])
         print(f"Completed the attribute calculations for variant {j + 1}, plotting graphs...")
 
         fig = plt.figure()
