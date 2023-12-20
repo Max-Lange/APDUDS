@@ -1,3 +1,25 @@
+# Git ignore VSc workspace
+APDUDS.code-workspace
+
+#Ignore SWMM output file
+test_swmm.txt
+rest_swmm.ini
+
+#Ignore random files / folders
+.ssh
+.bash_history
+.gitconfig
+.lesshst
+test.py
+api_key.txt
+*.bash_history
+*.xlsx
+
+
+
+#Ignore private API key
+api_key.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

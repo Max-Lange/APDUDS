@@ -11,6 +11,7 @@ This file contains the following major functions:
 
 from datetime import datetime
 import pandas as pd
+from numpy import abs
 
 def swmm_file_creator(nodes: pd.DataFrame, edges: pd.DataFrame, voro, settings: dict):
     """Creates a .txt file which follows the System Water Management Model format (SWMM),
@@ -233,8 +234,8 @@ def create_junctions(nodes: pd.DataFrame):
         if node.role == "node":
             nr_length = len(str(node_index))
             junc = "j_" + str(node_index) + (17 - 2 - nr_length) * " "
-            junc += "-" + str(node.depth) + (10 - len(str(node.depth))) * " "
-            junc += str(node.depth) + (11 - len(str(node.depth))) * " "
+            junc += "-" + str(abs(node.install_depth)) + (10 - len(str(abs(node.install_depth)))) * " "
+            junc += str(abs(node.install_depth - node.elevation)) + (11 - len(str(abs(node.install_depth - node.elevation)))) * " "
             junc += "0          0          0"
 
             junctions.append(junc)
@@ -253,7 +254,7 @@ def create_outfalls(nodes: pd.DataFrame):
     for index, node in nodes.iterrows():
         if node.role in ["outfall", "overflow"]:
             out = "j_" + str(index) + (17 - 2 - len(str(index))) * " "
-            depth = "-" + str(nodes.at[index, 'depth'])
+            depth = "-" + str(abs(nodes.at[index, 'install_depth']))
             out += depth + (10 - len(depth)) * " "
             out += "FREE                        NO"
 
@@ -326,7 +327,7 @@ def create_timeseries(settings: dict, date: str):
             str_time += str(minutes)
 
         step += str_time + (11 - len(str_time)) * " "
-        step += str(settings["peak_rain"] * 0.36)
+        step += str(settings["peak_rain"])
 
         timeseries.append(step)
     timeseries.append("\n")
